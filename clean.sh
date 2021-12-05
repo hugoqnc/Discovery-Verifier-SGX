@@ -1,0 +1,1 @@
+rm ../p_public_A.txt; rm ../p_public_B.txt; 

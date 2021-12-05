@@ -24,6 +24,7 @@ typedef struct _sgx_errlist_t {
 } sgx_errlist_t;
 
 sgx_ec256_public_t p_public_A;
+sgx_ec256_public_t p_public_B;
 
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
@@ -149,13 +150,12 @@ void ocall_print_string(const char *str)
     printf("%s", str);
 }
 
-/************************
-* BEGIN [2. E_A key pair generation]
-*************************/
+
 void ocall_send_public_key(sgx_ec256_public_t p_public){
     p_public_A = p_public;
     printf("From App: Received p_public_A\n");
 }
+
 void export_public_key(){
     //printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
     
@@ -173,112 +173,37 @@ void export_public_key(){
     // Close the file
     newFile.close();
 
-    // RECEIVE
-    sgx_ec256_public_t p_public_A_receive;
-
-    std::ifstream in("../p_public_A.txt");
-    in.read((char*)p_public_A_receive.gx, SGX_ECP256_KEY_SIZE);
-    in.read((char*)p_public_A_receive.gy, SGX_ECP256_KEY_SIZE);
-    in.close();
-    // printf("KEY: %s | %s\n",p_public_A_receive.gx,p_public_A_receive.gy);
-
-
     printf("From App: Exported p_public_A to filesystem\n");
 }
-// void export_public_key(){
-//     printf("KEY: %s | %s\n", (char*)::p_public_A.gx, (char*)::p_public_A.gy);
-    
-//     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-//     remove("../p_public_A.txt");
+void wait_for_file(std::string filePath){
+    // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
+    std::ifstream ifile;
+    bool exists = false;
+    while(!exists){
+        ifile.open(filePath);
+        if (ifile) {
+            ifile.close();
+            exists = true;
+            sleep(2);
+        } else {
+            sleep(1);
+        }
+    }
+    std::cout << "From App: Received file '" << filePath << "'\n";
+}
 
-//     // Create and open a text file
-//     std::ofstream newFile("../p_public_A.txt");
+void parse_public_key(){
+    //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-//     // Write to the file
-//     newFile.write((char*)::p_public_A.gx, SGX_ECP256_KEY_SIZE+1);
-//     newFile.write((char*)::p_public_A.gy, SGX_ECP256_KEY_SIZE+1);
+    std::ifstream in("../p_public_B.txt");
+    in.read((char*)::p_public_B.gx, SGX_ECP256_KEY_SIZE);
+    in.read((char*)::p_public_B.gy, SGX_ECP256_KEY_SIZE);
+    in.close();
 
-//     // Close the file
-//     newFile.close();
-
-//     // CODE
-//     std::stringstream ss;
-//     ss << std::hex << std::setfill('0');
-//     for (int i = 0; i < SGX_ECP256_KEY_SIZE; ++i)
-//     {
-//         ss << std::setw(2) << static_cast<unsigned>(p_public_A.gx[i]);
-//     }
-//     std::string test = ss.str();
-//     std::cout << "CODE: " << test << "\n";
-
-//     //DECODE
-//     std::istringstream hex_chars_stream(test);
-//     uint8_t out_gx[SGX_ECP256_KEY_SIZE]; 
-
-//     for (int b = 0, e = SGX_ECP256_KEY_SIZE; b < e; b += 2)
-//     {
-//         std::stringstream ss1;
-//         ss1 << std::hex << test.substr(b, 2);
-
-//         int valor;
-//         ss1 >> valor;
-
-//         out_gx[b / 2] = (unsigned char)valor;
-//     }
-//     // 
-//     // std::vector<unsigned char> bytes;
-
-//     // unsigned int c;
-//     // while (hex_chars_stream >> std::hex >> c)
-//     // {
-//     //     bytes.push_back(c);
-//     // }
-
-//     printf("DECODE: %s \n", out_gx);
-
-
-//     printf("From App: Exported p_public_A to filesystem\n");
-// void export_public_key(){
-//     printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
-    
-//     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
-
-//     remove("../p_public_A.txt");
-
-//     // Create and open a text file
-//     std::ofstream newFile("../p_public_A.txt");
-
-//     // Write to the file
-//     for (int i = 0; i < SGX_ECP256_KEY_SIZE; i++)
-//     {
-//         newFile << p_public_A.gx[i];
-//     }
-
-//     for (int i = 0; i < SGX_ECP256_KEY_SIZE; i++)
-//     {
-//         newFile << p_public_A.gy[i];
-//     }
-
-//     // Close the file
-//     newFile.close();
-
-//     // RECEIVE
-//     sgx_ec256_public_t p_public_A_receive;
-
-//     std::ifstream in("../p_public_A.txt");
-//     in.read((char*)p_public_A_receive.gx, SGX_ECP256_KEY_SIZE);
-//     in.read((char*)p_public_A_receive.gy, SGX_ECP256_KEY_SIZE);
-//     in.close();
-//     printf("KEY: %s | %s\n",p_public_A_receive.gx,p_public_A_receive.gy);
-
-    //bool equal = (std::strcmp(charTime, buf) == 0);
-
-
-// }
-/************************
-* END   [2. E_A key pair generation]
-*************************/
+    // printf("KEY: %s | %s\n", p_public_B.gx, p_public_B.gy);
+    printf("From App: Received p_public_B\n");
+}
 
 
 /* Application entry */
@@ -311,10 +236,32 @@ int SGX_CDECL main(int argc, char *argv[])
         print_error_message(sgx_status);
         return -1;
     }
-
-    export_public_key();
     /************************
     * END   [2. E_A key pair generation]
+    *************************/
+
+
+    /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    export_public_key();
+    wait_for_file("../p_public_B.txt");
+    parse_public_key();
+    /************************
+    * END   [1. Communication between A_A & A_B]
+    *************************/
+
+
+    /************************
+    * BEGIN [3. E_B compute shared secret]
+    *************************/
+    computeSharedKey(global_eid, &sgx_status, p_public_B);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
+    /************************
+    * END   [3. E_B compute shared secret]
     *************************/
 
 

@@ -66,7 +66,9 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_A)
     return status;
   }
 
-  //printf("SHARED DH: %s \n", p_shared_key.s);
+  // printf("KEY A: %s | %s\n",p_public_A.gx,p_public_A.gy);
+  // printf("KEY B: %s | %s\n",p_public.gx,p_public.gy);
+  // printf("S. DH: %s \n", p_shared_key.s);
 
   printf("From Enclave: Shared Key computed\n");
 

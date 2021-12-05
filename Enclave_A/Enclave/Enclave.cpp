@@ -9,6 +9,9 @@ sgx_ec256_private_t p_private;
 sgx_ec256_public_t p_public;
 sgx_ecc_state_handle_t ecc_handle;
 
+sgx_ec256_dh_shared_t p_shared_key;
+
+
 int printf(const char* fmt, ...)
 {
     char buf[BUFSIZ] = { '\0' };
@@ -50,4 +53,29 @@ sgx_status_t generateKeyPair()
 }
 /************************
 * END   [2. E_A key pair generation]
+*************************/
+
+/************************
+* BEGIN [3. E_B compute shared secret]
+*************************/
+sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B)
+{
+  sgx_status_t status;
+
+  status = sgx_ecc256_compute_shared_dhkey(&p_private, &p_public_B, &p_shared_key, ecc_handle);
+  if (status!=SGX_SUCCESS){
+    return status;
+  }
+
+  // printf("KEY A: %s | %s\n",p_public.gx,p_public.gy);
+  // printf("KEY B: %s | %s\n",p_public_B.gx,p_public_B.gy);
+  // printf("S. DH: %s \n", p_shared_key.s);
+
+  printf("From Enclave: Shared Key computed\n");
+
+  
+  return status;
+}
+/************************
+* END   [3. E_B compute shared secret]
 *************************/

@@ -148,20 +148,13 @@ void ocall_print_string(const char *str)
     printf("%s", str);
 }
 
-/************************
-* BEGIN [2. E_B key pair generation]
-*************************/
+
 void ocall_send_public_key(sgx_ec256_public_t p_public){
     p_public_B = p_public;
     printf("From App: Received p_public_B\n");
 }
-/************************
-* END   [2. E_B key pair generation]
-*************************/
 
-/************************
-* BEGIN [3. E_B compute shared secret]
-*************************/
+
 void wait_for_file(std::string filePath){
     // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
     std::ifstream ifile;
@@ -190,9 +183,27 @@ void parse_public_key(){
     // printf("KEY: %s | %s\n", p_public_A.gx, p_public_A.gy);
     printf("From App: Received p_public_A\n");
 }
-/************************
-* END   [3. E_B compute shared secret]
-*************************/
+
+void export_public_key(){
+    //printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
+    
+    // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    remove("../p_public_B.txt");
+
+    // Create and open a text file
+    std::ofstream newFile("../p_public_B.txt");
+
+    // Write to the file
+    newFile.write((char*)::p_public_B.gx, SGX_ECP256_KEY_SIZE);
+    newFile.write((char*)::p_public_B.gy, SGX_ECP256_KEY_SIZE);
+
+    // Close the file
+    newFile.close();
+
+    printf("From App: Exported p_public_B to filesystem\n");
+}
+
 
 
 /* Application entry */
@@ -230,21 +241,39 @@ int SGX_CDECL main(int argc, char *argv[])
     * END   [2. E_B key pair generation]
     *************************/
 
+
+    /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    wait_for_file("../p_public_A.txt");
+    parse_public_key();
+    /************************
+    * END   [1. Communication between A_A & A_B]
+    *************************/
+
+
     /************************
     * BEGIN [3. E_B compute shared secret]
     *************************/
-    wait_for_file("../p_public_A.txt");
-
-    parse_public_key();
-
     computeSharedKey(global_eid, &sgx_status, p_public_A);
     if (sgx_status != SGX_SUCCESS) {
         print_error_message(sgx_status);
         return -1;
     }
     /************************
-    * BEGIN [3. E_B compute shared secret]
+    * END   [3. E_B compute shared secret]
     *************************/
+
+
+    /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    export_public_key();
+    /************************
+    * END   [1. Communication between A_A & A_B]
+    *************************/
+
+
 
 
     /* Destroy the enclave */
