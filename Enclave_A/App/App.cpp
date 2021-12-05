@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -155,23 +157,125 @@ void ocall_send_public_key(sgx_ec256_public_t p_public){
     printf("From App: Received p_public_A\n");
 }
 void export_public_key(){
-    // Based on https://www.w3schools.com/cpp/cpp_files.asp
+    //printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
+    
+    // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
     remove("../p_public_A.txt");
 
     // Create and open a text file
-    std::ofstream MyFile("../p_public_A.txt");
+    std::ofstream newFile("../p_public_A.txt");
 
     // Write to the file
-    MyFile << ::p_public_A.gx;
-    MyFile << "\n";
-    MyFile << ::p_public_A.gy;
+    newFile.write((char*)::p_public_A.gx, SGX_ECP256_KEY_SIZE);
+    newFile.write((char*)::p_public_A.gy, SGX_ECP256_KEY_SIZE);
 
     // Close the file
-    MyFile.close();
+    newFile.close();
+
+    // RECEIVE
+    sgx_ec256_public_t p_public_A_receive;
+
+    std::ifstream in("../p_public_A.txt");
+    in.read((char*)p_public_A_receive.gx, SGX_ECP256_KEY_SIZE);
+    in.read((char*)p_public_A_receive.gy, SGX_ECP256_KEY_SIZE);
+    in.close();
+    // printf("KEY: %s | %s\n",p_public_A_receive.gx,p_public_A_receive.gy);
+
 
     printf("From App: Exported p_public_A to filesystem\n");
 }
+// void export_public_key(){
+//     printf("KEY: %s | %s\n", (char*)::p_public_A.gx, (char*)::p_public_A.gy);
+    
+//     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+//     remove("../p_public_A.txt");
+
+//     // Create and open a text file
+//     std::ofstream newFile("../p_public_A.txt");
+
+//     // Write to the file
+//     newFile.write((char*)::p_public_A.gx, SGX_ECP256_KEY_SIZE+1);
+//     newFile.write((char*)::p_public_A.gy, SGX_ECP256_KEY_SIZE+1);
+
+//     // Close the file
+//     newFile.close();
+
+//     // CODE
+//     std::stringstream ss;
+//     ss << std::hex << std::setfill('0');
+//     for (int i = 0; i < SGX_ECP256_KEY_SIZE; ++i)
+//     {
+//         ss << std::setw(2) << static_cast<unsigned>(p_public_A.gx[i]);
+//     }
+//     std::string test = ss.str();
+//     std::cout << "CODE: " << test << "\n";
+
+//     //DECODE
+//     std::istringstream hex_chars_stream(test);
+//     uint8_t out_gx[SGX_ECP256_KEY_SIZE]; 
+
+//     for (int b = 0, e = SGX_ECP256_KEY_SIZE; b < e; b += 2)
+//     {
+//         std::stringstream ss1;
+//         ss1 << std::hex << test.substr(b, 2);
+
+//         int valor;
+//         ss1 >> valor;
+
+//         out_gx[b / 2] = (unsigned char)valor;
+//     }
+//     // 
+//     // std::vector<unsigned char> bytes;
+
+//     // unsigned int c;
+//     // while (hex_chars_stream >> std::hex >> c)
+//     // {
+//     //     bytes.push_back(c);
+//     // }
+
+//     printf("DECODE: %s \n", out_gx);
+
+
+//     printf("From App: Exported p_public_A to filesystem\n");
+// void export_public_key(){
+//     printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
+    
+//     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+//     remove("../p_public_A.txt");
+
+//     // Create and open a text file
+//     std::ofstream newFile("../p_public_A.txt");
+
+//     // Write to the file
+//     for (int i = 0; i < SGX_ECP256_KEY_SIZE; i++)
+//     {
+//         newFile << p_public_A.gx[i];
+//     }
+
+//     for (int i = 0; i < SGX_ECP256_KEY_SIZE; i++)
+//     {
+//         newFile << p_public_A.gy[i];
+//     }
+
+//     // Close the file
+//     newFile.close();
+
+//     // RECEIVE
+//     sgx_ec256_public_t p_public_A_receive;
+
+//     std::ifstream in("../p_public_A.txt");
+//     in.read((char*)p_public_A_receive.gx, SGX_ECP256_KEY_SIZE);
+//     in.read((char*)p_public_A_receive.gy, SGX_ECP256_KEY_SIZE);
+//     in.close();
+//     printf("KEY: %s | %s\n",p_public_A_receive.gx,p_public_A_receive.gy);
+
+    //bool equal = (std::strcmp(charTime, buf) == 0);
+
+
+// }
 /************************
 * END   [2. E_A key pair generation]
 *************************/

@@ -1,6 +1,9 @@
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <assert.h>
+
+#include <iostream>
+#include <fstream>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -19,6 +22,7 @@ typedef struct _sgx_errlist_t {
 } sgx_errlist_t;
 
 sgx_ec256_public_t p_public_A;
+sgx_ec256_public_t p_public_B;
 
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
@@ -145,15 +149,51 @@ void ocall_print_string(const char *str)
 }
 
 /************************
-* BEGIN [2. E_A key pair generation]
+* BEGIN [2. E_B key pair generation]
 *************************/
 void ocall_send_public_key(sgx_ec256_public_t p_public){
-    p_public_A = p_public;
+    p_public_B = p_public;
+    printf("From App: Received p_public_B\n");
+}
+/************************
+* END   [2. E_B key pair generation]
+*************************/
+
+/************************
+* BEGIN [3. E_B compute shared secret]
+*************************/
+void wait_for_file(std::string filePath){
+    // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
+    std::ifstream ifile;
+    bool exists = false;
+    while(!exists){
+        ifile.open(filePath);
+        if (ifile) {
+            ifile.close();
+            exists = true;
+            sleep(2);
+        } else {
+            sleep(1);
+        }
+    }
+    std::cout << "From App: Received file '" << filePath << "'\n";
+}
+
+void parse_public_key(){
+    //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    std::ifstream in("../p_public_A.txt");
+    in.read((char*)::p_public_A.gx, SGX_ECP256_KEY_SIZE);
+    in.read((char*)::p_public_A.gy, SGX_ECP256_KEY_SIZE);
+    in.close();
+
+    // printf("KEY: %s | %s\n", p_public_A.gx, p_public_A.gy);
     printf("From App: Received p_public_A\n");
 }
 /************************
-* END   [2. E_A key pair generation]
+* END   [3. E_B compute shared secret]
 *************************/
+
 
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
@@ -179,7 +219,7 @@ int SGX_CDECL main(int argc, char *argv[])
     }
 
     /************************
-    * BEGIN [2. E_A key pair generation]
+    * BEGIN [2. E_B key pair generation]
     *************************/
     generateKeyPair(global_eid, &sgx_status);
     if (sgx_status != SGX_SUCCESS) {
@@ -187,7 +227,23 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     /************************
-    * END   [2. E_A key pair generation]
+    * END   [2. E_B key pair generation]
+    *************************/
+
+    /************************
+    * BEGIN [3. E_B compute shared secret]
+    *************************/
+    wait_for_file("../p_public_A.txt");
+
+    parse_public_key();
+
+    computeSharedKey(global_eid, &sgx_status, p_public_A);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
+    /************************
+    * BEGIN [3. E_B compute shared secret]
     *************************/
 
 

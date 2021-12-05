@@ -24,3 +24,7 @@ Enclave_B/app
 Enclave_B/enclave.signed.so
 Enclave_B/enclave.so
 p_public_A.txt
+Enclave_A/.vscode
+Enclave_B/.vscode
+.gitignore
+

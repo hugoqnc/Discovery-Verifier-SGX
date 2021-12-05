@@ -42,7 +42,7 @@ sgx_status_t generateKeyPair()
 
   status = sgx_ecc256_create_key_pair(&p_private, &p_public, ecc_handle);
 
-  printf("From Enclave: Key Generated\n");
+  printf("From Enclave: Key generated\n");
 
   ocall_send_public_key(p_public);
 
