@@ -18,6 +18,8 @@ typedef struct _sgx_errlist_t {
     const char *sug; /* Suggestion */
 } sgx_errlist_t;
 
+sgx_ec256_public_t p_public_A;
+
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
     {
@@ -142,6 +144,17 @@ void ocall_print_string(const char *str)
     printf("%s", str);
 }
 
+/************************
+* BEGIN [2. E_A key pair generation]
+*************************/
+void ocall_send_public_key(sgx_ec256_public_t p_public){
+    p_public_A = p_public;
+    printf("From App: Received p_public_A\n");
+}
+/************************
+* END   [2. E_A key pair generation]
+*************************/
+
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -164,6 +177,19 @@ int SGX_CDECL main(int argc, char *argv[])
         print_error_message(sgx_status);
         return -1;
     }
+
+    /************************
+    * BEGIN [2. E_A key pair generation]
+    *************************/
+    generateKeyPair(global_eid, &sgx_status);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
+    /************************
+    * END   [2. E_A key pair generation]
+    *************************/
+
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);

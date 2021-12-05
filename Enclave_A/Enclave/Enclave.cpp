@@ -4,8 +4,6 @@
 #include <stdio.h> /* vsnprintf */
 #include <string.h>
 
-#include "sgx_tcrypto.h"
-
 int enclave_secret = 1337;
 sgx_ec256_private_t p_private;
 sgx_ec256_public_t p_public;
@@ -47,7 +45,7 @@ sgx_status_t generateKeyPair()
   printf("From Enclave: Key Generated\n");
 
   ocall_send_public_key(p_public);
-  
+
   return status;
 }
 /************************
