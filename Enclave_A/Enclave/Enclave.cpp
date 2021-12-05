@@ -2,15 +2,16 @@
 #include "Enclave_t.h" /* print_string */
 #include <stdarg.h>
 #include <stdio.h> /* vsnprintf */
-#include <string.h>
+#include <string>
 
 int enclave_secret = 1337;
 sgx_ec256_private_t p_private;
 sgx_ec256_public_t p_public;
 sgx_ecc_state_handle_t ecc_handle;
 
-sgx_ec256_dh_shared_t p_shared_key;
+sgx_aes_ctr_128bit_key_t p_shared_key_128;
 
+std::string PSK = "I AM ALICE";
 
 int printf(const char* fmt, ...)
 {
@@ -62,14 +63,22 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B)
 {
   sgx_status_t status;
 
+  sgx_ec256_dh_shared_t p_shared_key;
+
   status = sgx_ecc256_compute_shared_dhkey(&p_private, &p_public_B, &p_shared_key, ecc_handle);
   if (status!=SGX_SUCCESS){
     return status;
   }
 
+  for (int i = 0; i < SGX_AESCTR_KEY_SIZE; ++i)
+  {
+      p_shared_key_128[i] = p_shared_key.s[i];
+  }
+  
+  
   // printf("KEY A: %s | %s\n",p_public.gx,p_public.gy);
   // printf("KEY B: %s | %s\n",p_public_B.gx,p_public_B.gy);
-  // printf("S. DH: %s \n", p_shared_key.s);
+  // printf("S. DH: %s \n", p_shared_key_128);
 
   printf("From Enclave: Shared Key computed\n");
 
@@ -79,3 +88,10 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B)
 /************************
 * END   [3. E_B compute shared secret]
 *************************/
+
+sgx_status_t getPSK()
+{
+  sgx_status_t status = SGX_SUCCESS;
+
+  return status;
+}

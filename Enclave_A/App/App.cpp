@@ -264,6 +264,11 @@ int SGX_CDECL main(int argc, char *argv[])
     * END   [3. E_B compute shared secret]
     *************************/
 
+    getPSK(global_eid, &sgx_status);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
