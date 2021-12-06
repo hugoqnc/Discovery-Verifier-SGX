@@ -24,6 +24,8 @@ typedef struct _sgx_errlist_t {
 sgx_ec256_public_t p_public_A;
 sgx_ec256_public_t p_public_B;
 
+char* encrypted_PSK_A;
+
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
     {
@@ -204,6 +206,25 @@ void export_public_key(){
     printf("From App: Exported p_public_B to filesystem\n");
 }
 
+void parse_PSK(){
+    //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    std::ifstream in("../encrypted_PSK_A.txt");
+    
+    //Get file length
+    // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+    in.seekg(0, std::ios::end); 
+    int length = in.tellg();
+    in.seekg(0, std::ios::beg);
+    encrypted_PSK_A = new char[length]; 
+
+    in.read((char*)::encrypted_PSK_A, length);
+    in.close();
+
+    //printf("APP Encrypted mes: %s\n", encrypted_PSK_A);
+    printf("From App: Received encrypted_PSK_A\n");
+}
+
 
 
 /* Application entry */
@@ -269,6 +290,16 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_public_key();
+    /************************
+    * END   [1. Communication between A_A & A_B]
+    *************************/
+
+
+   /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    wait_for_file("../encrypted_PSK_A.txt");
+    parse_PSK();
     /************************
     * END   [1. Communication between A_A & A_B]
     *************************/

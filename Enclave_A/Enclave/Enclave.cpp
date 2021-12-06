@@ -112,7 +112,6 @@ void decryptMessage(char *encMessageIn, size_t len, char *decMessageOut, size_t 
 		NULL, 0,
 		(sgx_aes_gcm_128bit_tag_t *) encMessage);
 	memcpy(decMessageOut, p_dst, lenOut);
-  //emit_debug((char *) p_dst);
 }
 
 void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t lenOut)
@@ -133,10 +132,34 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 	memcpy(encMessageOut,p_dst,lenOut);
 }
 
+// sgx_status_t testEncryption()
+// {
+//   char *message = "Hello, crypto enclave!";
+// 	printf("Original message: %s\n", message);
+
+// 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
+// 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
+// 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
+
+// 	encryptMessage(message, strlen(message), encMessage, encMessageLen);
+// 	encMessage[encMessageLen] = '\0';
+// 	printf("Encrypted message: %s\n", encMessage);
+
+//   // The decrypted message will contain the same message as the original one.
+// 	size_t decMessageLen = strlen(message);
+// 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+
+// 	decryptMessage(encMessage,encMessageLen,decMessage,decMessageLen);
+// 	decMessage[decMessageLen] = '\0';
+// 	printf("Decrypted message: %s\n", decMessage);
+
+//   return SGX_SUCCESS;
+// }
+
 sgx_status_t getPSK()
 {
-  char *message = "Hello, crypto enclave!";
-	printf("Original message: %s\n", message);
+  char *message = "I AM ALICE";
+	//printf("Original message: %s\n", message);
 
 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
@@ -144,15 +167,11 @@ sgx_status_t getPSK()
 
 	encryptMessage(message, strlen(message), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
-	printf("Encrypted message: %s\n", encMessage);
+	//printf("Encrypted message: %s\n", encMessage);
 
-  // The decrypted message will contain the same message as the original one.
-	size_t decMessageLen = strlen(message);
-	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+  //printf("From Enclave: Encrypted PSK computed\n");
 
-	decryptMessage(encMessage,encMessageLen,decMessage,decMessageLen);
-	decMessage[decMessageLen] = '\0';
-	printf("Decrypted message: %s\n", decMessage);
+  ocall_send_PSK(encMessage);
 
   return SGX_SUCCESS;
 }
