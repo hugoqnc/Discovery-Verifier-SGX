@@ -239,7 +239,7 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     printf("From App: Enclave creation success. \n");
     
-    printf("From App: Write your protocol here ... \n");
+    //printf("From App: Write your protocol here ... \n");
 
 
     sgx_status_t sgx_status;
@@ -304,7 +304,11 @@ int SGX_CDECL main(int argc, char *argv[])
     * END   [1. Communication between A_A & A_B]
     *************************/
 
-
+    decryptPSK(global_eid, &sgx_status, encrypted_PSK_A);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
 
 
     /* Destroy the enclave */

@@ -12,8 +12,8 @@ sgx_ecc_state_handle_t ecc_handle;
 sgx_aes_ctr_128bit_key_t p_shared_key_128;
 uint8_t iv[16];
 
-//uint8_t PSK[11] = "I AM ALICE";
-uint8_t* PSK = (uint8_t*) "I AM ALICE";
+char *PSK_A = "I AM ALICE";
+char *PSK_B = "I AM BOBOB";
 
 int printf(const char* fmt, ...)
 {
@@ -28,9 +28,9 @@ int printf(const char* fmt, ...)
 
 sgx_status_t printSecret()
 {
-  char buf[BUFSIZ] = {"From Enclave: Hello from the enclave.\n"};
-  ocall_print_string(buf);
-  printf("From Enclave: Another way to print from the Enclave. My secret is %u.\n", enclave_secret);
+  //char buf[BUFSIZ] = {"From Enclave: Hello from the enclave.\n"};
+  //ocall_print_string(buf);
+  printf("From Enclave: My secret is %u.\n", enclave_secret);
   return SGX_SUCCESS;
 }
 
@@ -158,18 +158,16 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 
 sgx_status_t getPSK()
 {
-  char *message = "I AM ALICE";
-	//printf("Original message: %s\n", message);
+	//printf("Original message: %s\n", PSK_A);
 
-	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
-	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
+	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(PSK_A)); 
 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
 
-	encryptMessage(message, strlen(message), encMessage, encMessageLen);
+	encryptMessage(PSK_A, strlen(PSK_A), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
 	//printf("Encrypted message: %s\n", encMessage);
 
-  //printf("From Enclave: Encrypted PSK computed\n");
+  printf("From Enclave: Encrypted PSK_A computed (%s)\n", PSK_A);
 
   ocall_send_PSK(encMessage);
 
