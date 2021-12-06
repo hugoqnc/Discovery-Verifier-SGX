@@ -127,7 +127,7 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 }
 
 
-sgx_status_t decryptPSK(char* encrypted_PSK_A)
+sgx_status_t checkPSK(char* encrypted_PSK_A)
 {
   //printf("ENC Encrypted mes: %s\n", encrypted_PSK_A);
 
