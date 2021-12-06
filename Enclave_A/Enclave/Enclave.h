@@ -35,6 +35,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "sgx_tcrypto.h"
+#include "sgx_trts.h"
 
 #if defined(__cplusplus)
 extern "C" {

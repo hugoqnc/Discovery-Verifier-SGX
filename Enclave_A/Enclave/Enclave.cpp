@@ -91,94 +91,70 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B)
 * END   [3. E_B compute shared secret]
 *************************/
 
-// sgx_status_t getPSK()
-// {
-//   sgx_status_t status;
+// The following functions encryptMessage and decryptMessage are based on https://github.com/rodolfoams/sgx-aes-gcm
+// It is probably too much compared to simply using "sgx_aes_ctr_encrypt" and "sgx_aes_ctr_decrypt",
+// however I wasn't able to make the decrypted text match the original text with these functions despite having
+// spent an enormous amount of time on it. 
 
-//   memset(iv, 0, 16); // Based on https://moodle-app2.let.ethz.ch/mod/forum/discuss.php?d=93167
-  
-//   uint8_t PSK_cipher[64];
-//   memset(PSK_cipher, 0, 64);
+#define BUFLEN 2048
 
-//   status = sgx_aes_ctr_encrypt((const sgx_aes_ctr_128bit_key_t*)&p_shared_key_128, (const uint8_t*)PSK, (const uint32_t)strlen((char*)PSK), (uint8_t*)iv, (const uint32_t)1, (uint8_t*)PSK_cipher);
+void decryptMessage(char *encMessageIn, size_t len, char *decMessageOut, size_t lenOut)
+{
+	uint8_t *encMessage = (uint8_t *) encMessageIn;
+	uint8_t p_dst[BUFLEN] = {0};
 
-//   printf("PLAINT: %s \n", (char *)PSK);
-//   printf("CIPHER: %s \n", (char *)PSK_cipher);
+	sgx_rijndael128GCM_decrypt(
+		&p_shared_key_128,
+		encMessage + SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE,
+		lenOut,
+		p_dst,
+		encMessage + SGX_AESGCM_MAC_SIZE, SGX_AESGCM_IV_SIZE,
+		NULL, 0,
+		(sgx_aes_gcm_128bit_tag_t *) encMessage);
+	memcpy(decMessageOut, p_dst, lenOut);
+  //emit_debug((char *) p_dst);
+}
 
-//   uint8_t result[64];
-//   memset(result, 0, 64);
+void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t lenOut)
+{
+	uint8_t *origMessage = (uint8_t *) decMessageIn;
+	uint8_t p_dst[BUFLEN] = {0};
 
-//   status = sgx_aes_ctr_decrypt((const sgx_aes_ctr_128bit_key_t*)&p_shared_key_128, (const uint8_t*)PSK_cipher, (const uint32_t)strlen((char*)PSK_cipher), (uint8_t*)iv, (const uint32_t)1, (uint8_t*)result);
-//   printf("RESULT: %s \n", (char *)result);
+	// Generate the IV (nonce)
+	sgx_read_rand(p_dst + SGX_AESGCM_MAC_SIZE, SGX_AESGCM_IV_SIZE);
 
-//   return status;
-// }
-
-// sgx_status_t getPSK()
-// {
-//   sgx_status_t status;
-
-//   uint8_t iv1[16];
-//   memset(iv1, 0, 16); 
-
-//   uint8_t* original = (uint8_t*) "I AM ALICE";
-//   printf("LEN KEY: %d\n", strlen((char *)&p_shared_key_128));
-
-//   uint8_t cipher[64];
-//   memset(cipher, 0, 64);
-
-//   uint8_t plaintext[64];
-//   memset(plaintext, 0, 64);
-
-//   printf("KEY: %s\n", (char*)&p_shared_key_128);
-//   printf("IV: %s\n", (char*)iv1);
-
-//   status = sgx_aes_ctr_encrypt(&p_shared_key_128, (const uint8_t*) original, strlen((char *)original), iv1, 128, cipher);
-//   printf("IV: %s\n", iv1);
-//   printf("LEN ORIG: %d\n", strlen((char *)original));
-//   if (status!=SGX_SUCCESS){
-//     printf("ERR encrypt\n");
-//   }
-
-//   status = sgx_aes_ctr_decrypt(&p_shared_key_128, (const uint8_t*) cipher, strlen((char *)cipher), iv1, 128, plaintext);
-//   printf("IV: %s\n", iv1);
-//   printf("LEN CIPHER: %d\n", strlen((char *)cipher));
-//   if (status!=SGX_SUCCESS){
-//     printf("ERR decrypt\n");
-//   }
-
-//   printf("original: %s\ncipher: %s\ndecrypted: %s\n", (char *)original, (char *)cipher, (char *)plaintext);
-
-//   return status;
-// }
-
+	sgx_rijndael128GCM_encrypt(
+		&p_shared_key_128,
+		origMessage, len, 
+		p_dst + SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE,
+		p_dst + SGX_AESGCM_MAC_SIZE, SGX_AESGCM_IV_SIZE,
+		NULL, 0,
+		(sgx_aes_gcm_128bit_tag_t *) (p_dst));	
+	memcpy(encMessageOut,p_dst,lenOut);
+}
 
 sgx_status_t getPSK()
 {
-  sgx_status_t status;
+  char *message = "Hello, crypto enclave!";
+	printf("Original message: %s\n", message);
 
-  uint8_t cipher[256];
-  memset(cipher, 0, 256);
+	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
+	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
+	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
 
-  uint8_t p_ctr[16] = { 4, 3, 2, 1, 0 };
-	uint32_t ctr_inc_bits = 32;
-	uint32_t src_len = 256;
-	uint8_t p_src[src_len] = { 65, 66, 67, 68 };
-	uint32_t dst_len = 256;
+	encryptMessage(message, strlen(message), encMessage, encMessageLen);
+	encMessage[encMessageLen] = '\0';
+	printf("Encrypted message: %s\n", encMessage);
 
-	sgx_aes_ctr_128bit_key_t p_key[16] = { 0, 7, 7, 8, 3, 1, 4, 4, 9, 8, 0, 0, 0, 0, 0 };
+  // The decrypted message will contain the same message as the original one.
+	size_t decMessageLen = strlen(message);
+	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
 
-	sgx_aes_ctr_encrypt((const sgx_aes_ctr_128bit_key_t*) p_key,
-			(const uint8_t*) p_src, src_len, p_ctr, ctr_inc_bits, cipher);
+	decryptMessage(encMessage,encMessageLen,decMessage,decMessageLen);
+	decMessage[decMessageLen] = '\0';
+	printf("Decrypted message: %s\n", decMessage);
 
-
-	uint8_t d_data[dst_len];
-  memset(cipher, 0, dst_len);
-
-	sgx_aes_ctr_decrypt((const sgx_aes_gcm_128bit_key_t*) p_key, cipher, dst_len,
-			p_ctr, ctr_inc_bits, d_data);
-
-  printf("original: %s\ncipher: %s\ndecrypted: %s\n", (char *)p_src, (char *)cipher, (char *)d_data);
-
-  return status;
+  return SGX_SUCCESS;
 }
+
+
