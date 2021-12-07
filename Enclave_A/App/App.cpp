@@ -27,6 +27,7 @@ sgx_ec256_public_t p_public_A;
 sgx_ec256_public_t p_public_B;
 
 char* encrypted_PSK_A;
+char* encrypted_PSK_B;
 
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
@@ -187,6 +188,8 @@ void export_public_key(){
 }
 
 void wait_for_file(std::string filePath){
+    std::cout << "From App: Waiting for '" << filePath << "'\n";
+
     // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
     std::ifstream ifile;
     bool exists = false;
@@ -232,6 +235,26 @@ void export_PSK(){
 
     printf("From App: Exported encrypted_PSK_A to filesystem\n");
 }
+
+void parse_PSK(){
+    //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    std::ifstream in("../encrypted_PSK_B.txt");
+    
+    //Get file length
+    // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+    in.seekg(0, std::ios::end); 
+    int length = in.tellg();
+    in.seekg(0, std::ios::beg);
+    encrypted_PSK_B = new char[length]; 
+
+    in.read((char*)::encrypted_PSK_B, length);
+    in.close();
+
+    //printf("APP Encrypted mes: %s\n", encrypted_PSK_B);
+    printf("From App: Received encrypted_PSK_B\n");
+}
+
 
 
 /* Application entry */
@@ -302,9 +325,17 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_PSK();
+    wait_for_file("../encrypted_PSK_B.txt");
+    parse_PSK();
     /************************
     * END   [1. Communication between A_A & A_B]
     *************************/
+
+    checkPSK(global_eid, &sgx_status, encrypted_PSK_B);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
 
 
 

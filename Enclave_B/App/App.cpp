@@ -168,6 +168,8 @@ void ocall_send_PSK(char *encMessage){
 
 
 void wait_for_file(std::string filePath){
+    std::cout << "From App: Waiting for '" << filePath << "'\n";
+
     // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
     std::ifstream ifile;
     bool exists = false;

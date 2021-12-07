@@ -174,4 +174,25 @@ sgx_status_t getPSK()
   return SGX_SUCCESS;
 }
 
+sgx_status_t checkPSK(char* encrypted_PSK_B)
+{
+  //printf("ENC Encrypted mes: %s\n", encrypted_PSK_B);
 
+	size_t decMessageLen = strlen(PSK_B);
+	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+  size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(PSK_B)); 
+
+	decryptMessage(encrypted_PSK_B,encMessageLen,decMessage,decMessageLen);
+	decMessage[decMessageLen] = '\0';
+	//printf("Decrypted message: %s\n", decMessage);
+
+  int cmp = strcmp(PSK_B, decMessage);
+
+  if (!cmp) {
+    printf("From Enclave: PSK_B match! (%s)\n", decMessage);
+    return SGX_SUCCESS;
+  } else {
+    printf("From Enclave: PSK_B doesn't match! (%s != %s)\n", decMessage, PSK_B);
+    return SGX_ERROR_UNEXPECTED;
+  }
+}

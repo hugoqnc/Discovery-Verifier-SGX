@@ -43,10 +43,11 @@ enclave {
 
     trusted{
       include "sgx_trts.h"
-      
+
       public sgx_status_t printSecret(void);
       public sgx_status_t generateKeyPair(void);
-      public sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_A);
+      public sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B);
+      public sgx_status_t checkPSK([in, string] char *encrypted_PSK_B);
       public sgx_status_t getPSK(void);
 
     };
