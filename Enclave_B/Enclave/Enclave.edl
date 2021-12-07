@@ -49,6 +49,7 @@ enclave {
       public sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_A);
       public sgx_status_t checkPSK([in, string] char *encrypted_PSK_A);
       public sgx_status_t getPSK(void);
+      public sgx_status_t solveChallenge([in, string] char *encrypted_challenge);
     };
     /*
      * ocall_print_string - invokes OCALL to display string buffer inside the enclave.

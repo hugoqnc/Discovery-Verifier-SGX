@@ -167,3 +167,27 @@ sgx_status_t getPSK()
 
   return SGX_SUCCESS;
 }
+
+
+sgx_status_t solveChallenge(char* encrypted_challenge)
+{
+	printf("From Enclave: Encrypted challenge is %s\n", encrypted_challenge);
+
+	size_t decMessageLen = 8;
+	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+  size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 8); 
+
+	decryptMessage(encrypted_challenge,encMessageLen,decMessage,decMessageLen);
+	decMessage[decMessageLen] = '\0';
+	
+  printf("Decrypted message: %s\n", decMessage);
+
+  uint32_t a1; 
+  uint32_t b1; 
+  memcpy((unsigned char *) &a1, &decMessage[0], 4);
+  memcpy((unsigned char *) &b1, &decMessage[4], 4);
+
+  printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);
+
+  return SGX_SUCCESS;
+}

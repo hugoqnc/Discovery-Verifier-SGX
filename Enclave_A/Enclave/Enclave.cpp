@@ -243,20 +243,6 @@ sgx_status_t getChallenge()
 	encMessage[encMessageLen] = '\0';
 	printf("Encrypted message: %s\n", encMessage);
 
-  // // The decrypted message will contain the same message as the original one.
-	// size_t decMessageLen = strlen((char*)bufferToEncrypt);
-	// char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
-
-	// decryptMessage(encMessage,encMessageLen,decMessage,decMessageLen);
-	// decMessage[decMessageLen] = '\0';
-	// printf("Decrypted message: %s\n", decMessage);
-
-  // uint32_t a1; 
-  // uint32_t b1; 
-  // memcpy((unsigned char *) &a1, &decMessage[0], 4);
-  // memcpy((unsigned char *) &b1, &decMessage[4], 4);
-
-  // printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);
 
   printf("From Enclave: Encrypted challenge computed\n");
 
