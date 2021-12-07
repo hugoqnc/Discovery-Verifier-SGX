@@ -29,6 +29,8 @@ sgx_ec256_public_t p_public_B;
 char* encrypted_PSK_A;
 char* encrypted_PSK_B;
 
+char* encrypted_challenge;
+
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
     {
@@ -167,6 +169,15 @@ void ocall_send_PSK(char *encMessage){
     printf("From App: Received encrypted_PSK_A\n");
 }
 
+void ocall_send_challenge(char *encMessage){
+    size_t encMessageLen = strlen(encMessage); 
+	encrypted_challenge = (char *) malloc((encMessageLen+1)*sizeof(char));
+    strcpy(encrypted_challenge, encMessage);
+    //printf("APP Encrypted mes: %s\n", encMessage);
+    printf("APP Encrypted mes: %s\n", encrypted_challenge);
+    printf("From App: Received encrypted_challenge\n");
+}
+
 void export_public_key(){
     //printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
     
@@ -198,7 +209,7 @@ void wait_for_file(std::string filePath){
             sleep(1);
         } else {
             exists = true;
-            sleep(2); // give the time to the file to be written
+            sleep(4); // give the time to the file to be written
         }
     }
     std::cout << "From App: Received file '" << filePath << "'\n";
@@ -253,6 +264,23 @@ void parse_PSK(){
     printf("From App: Received encrypted_PSK_B\n");
 }
 
+void export_challenge(){    
+    // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    remove("../encrypted_challenge.txt");
+
+    // Create and open a text file
+    std::ofstream newFile("../encrypted_challenge.txt");
+
+    // Write to the file
+    size_t encMessageLen = strlen(encrypted_challenge); 
+    newFile.write((char*)::encrypted_challenge, encMessageLen);
+
+    // Close the file
+    newFile.close();
+
+    printf("From App: Exported encrypted_challenge to filesystem\n");
+}
 
 
 /* Application entry */
@@ -335,7 +363,26 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
 
+    /************************
+    * BEGIN [4. E_A generates and encrypts the challenge]
+    *************************/
+    getChallenge(global_eid, &sgx_status);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
+    /************************
+    * END   [4. E_A generates and encrypts the challenge]
+    *************************/
 
+
+    /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    export_challenge();
+    /************************
+    * END   [1. Communication between A_A & A_B]
+    *************************/
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);

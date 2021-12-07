@@ -27,6 +27,7 @@ p_public_A.txt
 p_public_B.txt
 encrypted_PSK_B.txt
 encrypted_PSK_A.txt
+encrypted_challenge.txt
 Enclave_A/.vscode
 Enclave_B/.vscode
 .gitignore

@@ -10,10 +10,12 @@ sgx_ec256_public_t p_public;
 sgx_ecc_state_handle_t ecc_handle;
 
 sgx_aes_ctr_128bit_key_t p_shared_key_128;
-uint8_t iv[16];
 
 char *PSK_A = "I AM ALICE";
 char *PSK_B = "I AM BOBOB";
+
+uint32_t a; 
+uint32_t b; 
 
 int printf(const char* fmt, ...)
 {
@@ -165,7 +167,7 @@ sgx_status_t getPSK()
 
 	encryptMessage(PSK_A, strlen(PSK_A), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
-	//printf("Encrypted message: %s\n", encMessage);
+	printf("From Enclave: Encrypted PSK_A is %s\n", encMessage);
 
   printf("From Enclave: Encrypted PSK_A computed (%s)\n", PSK_A);
 
@@ -176,7 +178,7 @@ sgx_status_t getPSK()
 
 sgx_status_t checkPSK(char* encrypted_PSK_B)
 {
-  //printf("ENC Encrypted mes: %s\n", encrypted_PSK_B);
+	printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
 
 	size_t decMessageLen = strlen(PSK_B);
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -196,3 +198,72 @@ sgx_status_t checkPSK(char* encrypted_PSK_B)
     return SGX_ERROR_UNEXPECTED;
   }
 }
+
+
+
+/************************
+* BEGIN [4. E_A generates and encrypts the challenge]
+*************************/
+sgx_status_t getChallenge()
+{
+  sgx_status_t status;
+
+  //based on https://community.intel.com/t5/Intel-Software-Guard-Extensions/Using-random-library-within-enclave/td-p/1074122
+  status = sgx_read_rand((unsigned char *) &a, 4);
+  if (status!=SGX_SUCCESS){
+    return status;
+  }
+  status = sgx_read_rand((unsigned char *) &b, 4);
+  if (status!=SGX_SUCCESS){
+    return status;
+  }
+
+  printf("From Enclave: Chose a=%d & b=%d for challenge\n", a, b);
+  //printf("From Enclave: Chose a=%s & b=%s for challenge\n", a, b);
+
+  //unsigned int res = a+b;
+  //printf("RES: %d\n", res);
+
+  int bufferLen = 2*4;
+  unsigned char* bufferToEncrypt = (unsigned char *) malloc((bufferLen+1)*sizeof(unsigned char));
+
+  memcpy(&bufferToEncrypt[0], (unsigned char *) &a, 4);
+  memcpy(&bufferToEncrypt[4], (unsigned char *) &b, 4);
+  bufferToEncrypt[bufferLen] = '\0';
+
+  printf("Buffer: %s\n", bufferToEncrypt);
+
+
+
+	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
+	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen((char*)bufferToEncrypt)); 
+	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
+
+	encryptMessage((char*)bufferToEncrypt, strlen((char*)bufferToEncrypt), encMessage, encMessageLen);
+	encMessage[encMessageLen] = '\0';
+	printf("Encrypted message: %s\n", encMessage);
+
+  // // The decrypted message will contain the same message as the original one.
+	// size_t decMessageLen = strlen((char*)bufferToEncrypt);
+	// char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+
+	// decryptMessage(encMessage,encMessageLen,decMessage,decMessageLen);
+	// decMessage[decMessageLen] = '\0';
+	// printf("Decrypted message: %s\n", decMessage);
+
+  // uint32_t a1; 
+  // uint32_t b1; 
+  // memcpy((unsigned char *) &a1, &decMessage[0], 4);
+  // memcpy((unsigned char *) &b1, &decMessage[4], 4);
+
+  // printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);
+
+  printf("From Enclave: Encrypted challenge computed\n");
+
+  ocall_send_challenge(encMessage);
+
+  return status;
+}
+/************************
+* END   [4. E_A generates and encrypts the challenge]
+*************************/

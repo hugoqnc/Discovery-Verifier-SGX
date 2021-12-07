@@ -129,7 +129,7 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 
 sgx_status_t checkPSK(char* encrypted_PSK_A)
 {
-  //printf("ENC Encrypted mes: %s\n", encrypted_PSK_A);
+	printf("From Enclave: Encrypted PSK_A is %s\n", encrypted_PSK_A);
 
 	size_t decMessageLen = strlen(PSK_A);
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -159,7 +159,7 @@ sgx_status_t getPSK()
 
 	encryptMessage(PSK_B, strlen(PSK_B), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
-	//printf("Encrypted message: %s\n", encMessage);
+	printf("From Enclave: Encrypted PSK_B is %s\n", encMessage);
 
   printf("From Enclave: Encrypted PSK_B computed (%s)\n", PSK_B);
 
