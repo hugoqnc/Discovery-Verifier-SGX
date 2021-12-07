@@ -170,17 +170,15 @@ void ocall_send_PSK(char *encMessage){
 void wait_for_file(std::string filePath){
     std::cout << "From App: Waiting for '" << filePath << "'\n";
 
-    // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
-    std::ifstream ifile;
+    // Based on https://stackoverflow.com/questions/18100391/check-if-a-file-exists-without-opening-it
     bool exists = false;
     while(!exists){
-        ifile.open(filePath);
-        if (ifile) {
-            ifile.close();
-            exists = true;
-            sleep(2);
-        } else {
+        int res = access(filePath.c_str(), R_OK);
+        if (res<0) {            
             sleep(1);
+        } else {
+            exists = true;
+            sleep(2); // give the time to the file to be written
         }
     }
     std::cout << "From App: Received file '" << filePath << "'\n";
