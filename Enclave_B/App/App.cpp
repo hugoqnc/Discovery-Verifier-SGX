@@ -28,6 +28,7 @@ char* encrypted_PSK_A;
 char* encrypted_PSK_B;
 
 char* encrypted_challenge;
+char* encrypted_challenge_response;
 
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
@@ -168,6 +169,15 @@ void ocall_send_PSK(char *encMessage){
     printf("From App: Received encrypted_PSK_B\n");
 }
 
+void ocall_send_challenge_response(char *encMessage){
+    size_t encMessageLen = strlen(encMessage); 
+	encrypted_challenge_response = (char *) malloc((encMessageLen+1)*sizeof(char));
+    strcpy(encrypted_challenge_response, encMessage);
+    //printf("APP Encrypted mes: %s\n", encMessage);
+    printf("APP Encrypted mes: %s\n", encrypted_challenge_response);
+    printf("From App: Received encrypted_challenge_response\n");
+}
+
 
 void wait_for_file(std::string filePath){
     std::cout << "From App: Waiting for '" << filePath << "'\n";
@@ -272,6 +282,24 @@ void parse_challenge(){
 
     //printf("APP Encrypted mes: %s\n", encrypted_challenge);
     printf("From App: Received encrypted_challenge\n");
+}
+
+void export_challenge_response(){    
+    // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    remove("../encrypted_challenge_response.txt");
+
+    // Create and open a text file
+    std::ofstream newFile("../encrypted_challenge_response.txt");
+
+    // Write to the file
+    size_t encMessageLen = strlen(encrypted_challenge_response); 
+    newFile.write((char*)::encrypted_challenge_response, encMessageLen);
+
+    // Close the file
+    newFile.close();
+
+    printf("From App: Exported encrypted_challenge_response to filesystem\n");
 }
 
 
@@ -385,6 +413,15 @@ int SGX_CDECL main(int argc, char *argv[])
     }
     /************************
     * END   6&7. E_B decrypts the challenge, then computes and encrypts the response]
+    *************************/
+
+
+    /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    export_challenge_response();
+    /************************
+    * END   [1. Communication between A_A & A_B]
     *************************/
 
     /* Destroy the enclave */

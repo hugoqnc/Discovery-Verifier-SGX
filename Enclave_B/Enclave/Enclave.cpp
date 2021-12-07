@@ -89,6 +89,10 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_A)
 * END   [3. E_B compute shared secret]
 *************************/
 
+// The following functions encryptMessage and decryptMessage are based on https://github.com/rodolfoams/sgx-aes-gcm
+// It is probably too much compared to simply using "sgx_aes_ctr_encrypt" and "sgx_aes_ctr_decrypt",
+// however I wasn't able to make the decrypted text match the original text with these functions despite having
+// spent an enormous amount of time on it. 
 
 #define BUFLEN 2048
 
@@ -171,6 +175,9 @@ sgx_status_t getPSK()
 
 sgx_status_t solveChallenge(char* encrypted_challenge)
 {
+/************************
+* BEGIN [6. E_B decrypts the challenge]
+*************************/
 	printf("From Enclave: Encrypted challenge is %s\n", encrypted_challenge);
 
 	size_t decMessageLen = 8;
@@ -188,6 +195,43 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
   memcpy((unsigned char *) &b1, &decMessage[4], 4);
 
   printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);
+/************************
+* END   [6. E_B decrypts the challenge]
+*************************/
+
+
+/************************
+* BEGIN [7. E_B computes and encrypts the response]
+*************************/
+  unsigned int solved = a1+b1;
+  printf("RES: %d\n", solved);
+
+
+  int bufferLen = 4;
+  unsigned char* bufferToEncrypt = (unsigned char *) malloc((bufferLen+1)*sizeof(unsigned char));
+
+  memcpy(&bufferToEncrypt[0], (unsigned char *) &solved, 4);
+  bufferToEncrypt[bufferLen] = '\0';
+
+  printf("Buffer: %s\n", bufferToEncrypt);
+
+	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
+	size_t encMessageLen1 = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen((char*)bufferToEncrypt)); 
+	char *encMessage = (char *) malloc((encMessageLen1+1)*sizeof(char));
+
+	encryptMessage((char*)bufferToEncrypt, strlen((char*)bufferToEncrypt), encMessage, encMessageLen1);
+	encMessage[encMessageLen1] = '\0';
+	printf("Encrypted message: %s\n", encMessage);
+
+
+  printf("From Enclave: Encrypted challenge response computed\n");
+
+  ocall_send_challenge_response(encMessage);
+
+
+/************************
+* END   [7. E_B computes and encrypts the response]
+*************************/
 
   return SGX_SUCCESS;
 }

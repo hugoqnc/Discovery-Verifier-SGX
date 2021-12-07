@@ -221,8 +221,8 @@ sgx_status_t getChallenge()
   printf("From Enclave: Chose a=%d & b=%d for challenge\n", a, b);
   //printf("From Enclave: Chose a=%s & b=%s for challenge\n", a, b);
 
-  //unsigned int res = a+b;
-  //printf("RES: %d\n", res);
+  unsigned int res = a+b;
+  printf("RES: %d\n", res);
 
   int bufferLen = 2*4;
   unsigned char* bufferToEncrypt = (unsigned char *) malloc((bufferLen+1)*sizeof(unsigned char));
