@@ -50,6 +50,7 @@ enclave {
       public sgx_status_t checkPSK([in, string] char *encrypted_PSK_B);
       public sgx_status_t getPSK(void);
       public sgx_status_t getChallenge(void);
+      public sgx_status_t checkChallengeResponse([in, string] char *encrypted_challenge_response);
 
     };
     /*

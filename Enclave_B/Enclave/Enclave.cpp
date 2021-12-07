@@ -147,9 +147,11 @@ sgx_status_t checkPSK(char* encrypted_PSK_A)
 
   if (!cmp) {
     printf("From Enclave: PSK_A match! (%s)\n", decMessage);
+    free(decMessage);
     return SGX_SUCCESS;
   } else {
     printf("From Enclave: PSK_A doesn't match! (%s != %s)\n", decMessage, PSK_A);
+    free(decMessage);
     return SGX_ERROR_UNEXPECTED;
   }
 }
@@ -168,6 +170,8 @@ sgx_status_t getPSK()
   printf("From Enclave: Encrypted PSK_B computed (%s)\n", PSK_B);
 
   ocall_send_PSK(encMessage);
+
+  free(encMessage);
 
   return SGX_SUCCESS;
 }
@@ -193,6 +197,8 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
   uint32_t b1; 
   memcpy((unsigned char *) &a1, &decMessage[0], 4);
   memcpy((unsigned char *) &b1, &decMessage[4], 4);
+
+  free(decMessage);
 
   printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);
 /************************
@@ -227,6 +233,9 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
   printf("From Enclave: Encrypted challenge response computed\n");
 
   ocall_send_challenge_response(encMessage);
+
+  free(bufferToEncrypt);
+  free(encMessage);
 
 
 /************************

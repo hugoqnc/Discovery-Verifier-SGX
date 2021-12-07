@@ -248,6 +248,7 @@ void parse_PSK(){
 }
 
 void export_PSK(){    
+    printf("From App: Encrypted PSK_B is %s\n", encrypted_PSK_B);
     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
     remove("../encrypted_PSK_B.txt");
@@ -426,6 +427,10 @@ int SGX_CDECL main(int argc, char *argv[])
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
+
+    // free allocated memory
+    free(encrypted_PSK_B);
+    free(encrypted_challenge_response);
 
     printf("From App: Enclave destroyed.\n");
     return 0;

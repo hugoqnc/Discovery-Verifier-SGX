@@ -30,6 +30,7 @@ char* encrypted_PSK_A;
 char* encrypted_PSK_B;
 
 char* encrypted_challenge;
+char* encrypted_challenge_response;
 
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
@@ -282,6 +283,25 @@ void export_challenge(){
     printf("From App: Exported encrypted_challenge to filesystem\n");
 }
 
+void parse_challenge_response(){
+    //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    std::ifstream in("../encrypted_challenge_response.txt");
+    
+    //Get file length
+    // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
+    in.seekg(0, std::ios::end); 
+    int length = in.tellg();
+    in.seekg(0, std::ios::beg);
+    encrypted_challenge_response = new char[length]; 
+
+    in.read((char*)::encrypted_challenge_response, length);
+    in.close();
+
+    //printf("APP Encrypted mes: %s\n", encrypted_challenge_response);
+    printf("From App: Received encrypted_challenge_response\n");
+}
+
 
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
@@ -380,12 +400,31 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_challenge();
+    wait_for_file("../encrypted_challenge_response.txt");
+    parse_challenge_response();
     /************************
     * END   [1. Communication between A_A & A_B]
     *************************/
 
+
+    /************************
+    * BEGIN [6. E_A decrypts and verifies the challenge]
+    *************************/
+    checkChallengeResponse(global_eid, &sgx_status, encrypted_challenge_response);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
+    /************************
+    * END   [6. E_A decrypts and verifies the challenge]
+    *************************/
+
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
+
+    // free allocated memory
+    free(encrypted_PSK_A);
+    free(encrypted_challenge);
 
     printf("From App: Enclave destroyed.\n");
     return 0;

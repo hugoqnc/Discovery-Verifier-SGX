@@ -173,6 +173,8 @@ sgx_status_t getPSK()
 
   ocall_send_PSK(encMessage);
 
+  free(encMessage);
+
   return SGX_SUCCESS;
 }
 
@@ -192,9 +194,11 @@ sgx_status_t checkPSK(char* encrypted_PSK_B)
 
   if (!cmp) {
     printf("From Enclave: PSK_B match! (%s)\n", decMessage);
+    free(decMessage);
     return SGX_SUCCESS;
   } else {
     printf("From Enclave: PSK_B doesn't match! (%s != %s)\n", decMessage, PSK_B);
+    free(decMessage);
     return SGX_ERROR_UNEXPECTED;
   }
 }
@@ -221,9 +225,6 @@ sgx_status_t getChallenge()
   printf("From Enclave: Chose a=%d & b=%d for challenge\n", a, b);
   //printf("From Enclave: Chose a=%s & b=%s for challenge\n", a, b);
 
-  unsigned int res = a+b;
-  printf("RES: %d\n", res);
-
   int bufferLen = 2*4;
   unsigned char* bufferToEncrypt = (unsigned char *) malloc((bufferLen+1)*sizeof(unsigned char));
 
@@ -248,8 +249,50 @@ sgx_status_t getChallenge()
 
   ocall_send_challenge(encMessage);
 
+  free(bufferToEncrypt);
+  free(encMessage);
+
   return status;
 }
 /************************
 * END   [4. E_A generates and encrypts the challenge]
+*************************/
+
+
+/************************
+* BEGIN [6. E_A decrypts and verifies the challenge]
+*************************/
+sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
+{
+	printf("From Enclave: Encrypted challenge response is %s\n", encrypted_challenge_response);
+
+	size_t decMessageLen = 4;
+	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+  size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 4); 
+
+	decryptMessage(encrypted_challenge_response,encMessageLen,decMessage,decMessageLen);
+	decMessage[decMessageLen] = '\0';
+	
+  printf("Decrypted message: %s\n", decMessage);
+
+  unsigned int solved_A = a+b;
+  printf("RES: %d\n", solved_A);
+
+  unsigned int solved_B; 
+  memcpy((unsigned int *) &solved_B, &decMessage[0], 4);
+
+  free(decMessage);
+
+  int cmp = (solved_A == solved_B);
+
+  if (cmp) {
+    printf("From Enclave: Result match! (%d)\n", solved_B);
+    return SGX_SUCCESS;
+  } else {
+    printf("From Enclave: Result doesn't match! (%d != %d)\n", solved_B, solved_A);
+    return SGX_ERROR_UNEXPECTED;
+  }
+}
+/************************
+* END   [6. E_A decrypts and verifies the challenge]
 *************************/
