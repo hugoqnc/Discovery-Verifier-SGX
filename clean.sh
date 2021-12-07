@@ -1,6 +1,6 @@
-rm ../p_public_A.txt;
-rm ../p_public_B.txt; 
-rm ../encrypted_PSK_A.txt; 
-rm ../encrypted_PSK_B.txt; 
-rm ../encrypted_challenge.txt; 
-rm ../encrypted_challenge_response.txt; 
+rm ../p_public_A;
+rm ../p_public_B; 
+rm ../encrypted_PSK_A; 
+rm ../encrypted_PSK_B; 
+rm ../encrypted_challenge; 
+rm ../encrypted_challenge_response; 

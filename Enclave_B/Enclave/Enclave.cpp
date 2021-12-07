@@ -100,6 +100,7 @@ void decryptMessage(char *encMessageIn, size_t len, char *decMessageOut, size_t 
 {
 	uint8_t *encMessage = (uint8_t *) encMessageIn;
 	uint8_t p_dst[BUFLEN] = {0};
+  memset(p_dst, 0, BUFLEN);
 
 	sgx_rijndael128GCM_decrypt(
 		&p_shared_key_128,
@@ -116,6 +117,7 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 {
 	uint8_t *origMessage = (uint8_t *) decMessageIn;
 	uint8_t p_dst[BUFLEN] = {0};
+  memset(p_dst, 0, BUFLEN);
 
 	// Generate the IV (nonce)
 	sgx_read_rand(p_dst + SGX_AESGCM_MAC_SIZE, SGX_AESGCM_IV_SIZE);
@@ -166,6 +168,7 @@ sgx_status_t getPSK()
 	encryptMessage(PSK_B, strlen(PSK_B), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
 	printf("From Enclave: Encrypted PSK_B is %s\n", encMessage);
+  printf("PSK_B LEN: %d\n", encMessageLen);
 
   printf("From Enclave: Encrypted PSK_B computed (%s)\n", PSK_B);
 

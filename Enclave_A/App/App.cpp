@@ -184,10 +184,10 @@ void export_public_key(){
     
     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-    remove("../p_public_A.txt");
+    remove("../p_public_A");
 
     // Create and open a text file
-    std::ofstream newFile("../p_public_A.txt");
+    std::ofstream newFile("../p_public_A");
 
     // Write to the file
     newFile.write((char*)::p_public_A.gx, SGX_ECP256_KEY_SIZE);
@@ -219,7 +219,7 @@ void wait_for_file(std::string filePath){
 void parse_public_key(){
     //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-    std::ifstream in("../p_public_B.txt");
+    std::ifstream in("../p_public_B");
     in.read((char*)::p_public_B.gx, SGX_ECP256_KEY_SIZE);
     in.read((char*)::p_public_B.gy, SGX_ECP256_KEY_SIZE);
     in.close();
@@ -231,10 +231,10 @@ void parse_public_key(){
 void export_PSK(){    
     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-    remove("../encrypted_PSK_A.txt");
+    remove("../encrypted_PSK_A");
 
     // Create and open a text file
-    std::ofstream newFile("../encrypted_PSK_A.txt");
+    std::ofstream newFile("../encrypted_PSK_A");
 
     // Write to the file
     size_t encMessageLen = strlen(encrypted_PSK_A); 
@@ -249,7 +249,7 @@ void export_PSK(){
 void parse_PSK(){
     //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-    std::ifstream in("../encrypted_PSK_B.txt");
+    std::ifstream in("../encrypted_PSK_B");
     
     //Get file length
     // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
@@ -260,6 +260,8 @@ void parse_PSK(){
 
     in.read((char*)::encrypted_PSK_B, length);
     in.close();
+    printf("PSK_B LEN: %d\n", length);
+    //encrypted_PSK_B[length] = '\0';
 
     //printf("APP Encrypted mes: %s\n", encrypted_PSK_B);
     printf("From App: Received encrypted_PSK_B\n");
@@ -268,10 +270,10 @@ void parse_PSK(){
 void export_challenge(){    
     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-    remove("../encrypted_challenge.txt");
+    remove("../encrypted_challenge");
 
     // Create and open a text file
-    std::ofstream newFile("../encrypted_challenge.txt");
+    std::ofstream newFile("../encrypted_challenge");
 
     // Write to the file
     size_t encMessageLen = strlen(encrypted_challenge); 
@@ -286,7 +288,7 @@ void export_challenge(){
 void parse_challenge_response(){
     //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
-    std::ifstream in("../encrypted_challenge_response.txt");
+    std::ifstream in("../encrypted_challenge_response");
     
     //Get file length
     // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
@@ -342,7 +344,7 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_public_key();
-    wait_for_file("../p_public_B.txt");
+    wait_for_file("../p_public_B");
     parse_public_key();
     /************************
     * END   [1. Communication between A_A & A_B]
@@ -371,7 +373,7 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_PSK();
-    wait_for_file("../encrypted_PSK_B.txt");
+    wait_for_file("../encrypted_PSK_B");
     parse_PSK();
     /************************
     * END   [1. Communication between A_A & A_B]
@@ -400,7 +402,7 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_challenge();
-    wait_for_file("../encrypted_challenge_response.txt");
+    wait_for_file("../encrypted_challenge_response");
     parse_challenge_response();
     /************************
     * END   [1. Communication between A_A & A_B]
