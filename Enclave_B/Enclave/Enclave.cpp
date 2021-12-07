@@ -149,3 +149,21 @@ sgx_status_t checkPSK(char* encrypted_PSK_A)
     return SGX_ERROR_UNEXPECTED;
   }
 }
+
+sgx_status_t getPSK()
+{
+	//printf("Original message: %s\n", PSK_B);
+
+	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(PSK_B)); 
+	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
+
+	encryptMessage(PSK_B, strlen(PSK_B), encMessage, encMessageLen);
+	encMessage[encMessageLen] = '\0';
+	//printf("Encrypted message: %s\n", encMessage);
+
+  printf("From Enclave: Encrypted PSK_B computed (%s)\n", PSK_B);
+
+  ocall_send_PSK(encMessage);
+
+  return SGX_SUCCESS;
+}

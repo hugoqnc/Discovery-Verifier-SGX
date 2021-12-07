@@ -25,6 +25,7 @@ sgx_ec256_public_t p_public_A;
 sgx_ec256_public_t p_public_B;
 
 char* encrypted_PSK_A;
+char* encrypted_PSK_B;
 
 /* Error code returned by sgx_create_enclave */
 static sgx_errlist_t sgx_errlist[] = {
@@ -156,6 +157,15 @@ void ocall_send_public_key(sgx_ec256_public_t p_public){
     printf("From App: Received p_public_B\n");
 }
 
+void ocall_send_PSK(char *encMessage){
+    size_t encMessageLen = strlen(encMessage); 
+	encrypted_PSK_B = (char *) malloc((encMessageLen+1)*sizeof(char));
+    strcpy(encrypted_PSK_B, encMessage);
+    //printf("APP Encrypted mes: %s\n", encMessage);
+    //printf("APP Encrypted mes: %s\n", encrypted_PSK_B);
+    printf("From App: Received encrypted_PSK_B\n");
+}
+
 
 void wait_for_file(std::string filePath){
     // Based on https://www.tutorialspoint.com/the-best-way-to-check-if-a-file-exists-using-standard-c-cplusplus
@@ -223,6 +233,24 @@ void parse_PSK(){
 
     //printf("APP Encrypted mes: %s\n", encrypted_PSK_A);
     printf("From App: Received encrypted_PSK_A\n");
+}
+
+void export_PSK(){    
+    // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
+
+    remove("../encrypted_PSK_B.txt");
+
+    // Create and open a text file
+    std::ofstream newFile("../encrypted_PSK_B.txt");
+
+    // Write to the file
+    size_t encMessageLen = strlen(encrypted_PSK_B); 
+    newFile.write((char*)::encrypted_PSK_B, encMessageLen);
+
+    // Close the file
+    newFile.close();
+
+    printf("From App: Exported encrypted_PSK_B to filesystem\n");
 }
 
 
@@ -309,6 +337,20 @@ int SGX_CDECL main(int argc, char *argv[])
         print_error_message(sgx_status);
         return -1;
     }
+
+    getPSK(global_eid, &sgx_status);
+    if (sgx_status != SGX_SUCCESS) {
+        print_error_message(sgx_status);
+        return -1;
+    }
+
+    /************************
+    * BEGIN [1. Communication between A_A & A_B]
+    *************************/
+    export_PSK();
+    /************************
+    * END   [1. Communication between A_A & A_B]
+    *************************/
 
 
     /* Destroy the enclave */
