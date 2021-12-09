@@ -50,7 +50,7 @@ sgx_status_t generateKeyPair()
   return status;
 }
 /************************
-* END   [2. E_A key pair generation]
+* END [2. E_A key pair generation]
 *************************/
 
 /************************
@@ -77,7 +77,7 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B)
   return status;
 }
 /************************
-* END   [3. E_B compute shared secret]
+* END [3. E_B compute shared secret]
 *************************/
 
 // The following functions encryptMessage and decryptMessage are based on https://github.com/rodolfoams/sgx-aes-gcm
@@ -222,12 +222,12 @@ sgx_status_t getChallenge()
   return status;
 }
 /************************
-* END   [4. E_A generates and encrypts the challenge]
+* END [4. E_A generates and encrypts the challenge]
 *************************/
 
 
 /************************
-* BEGIN [6. E_A decrypts and verifies the challenge]
+* BEGIN [5. E_A decrypts and verifies the challenge]
 *************************/
 sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
 {
@@ -251,17 +251,17 @@ sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
   free(decMessage);
 
   int cmp = (solved_A == solved_B);
+  printf("From Enclave: Challenge result computed\n");
+  ocall_send_result(cmp);
 
   if (cmp) {
-    printf("From Enclave: Result match!\n");
     if (verbose_debug) {printf("From Enclave: Result match! (%d)\n", solved_B);}
-    return SGX_SUCCESS;
   } else {
-    printf("From Enclave: Result doesn't match!\n");
     if (verbose_debug) {printf("From Enclave: Result doesn't match! (%d != %d)\n", solved_B, solved_A);}
-    return SGX_ERROR_UNEXPECTED;
   }
+
+  return SGX_SUCCESS;
 }
 /************************
-* END   [6. E_A decrypts and verifies the challenge]
+* END [5. E_A decrypts and verifies the challenge]
 *************************/

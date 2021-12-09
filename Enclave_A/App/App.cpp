@@ -160,14 +160,14 @@ void ocall_print_string(const char *str)
 
 void ocall_send_public_key(sgx_ec256_public_t p_public){
     p_public_A = p_public;
-    printf("From App: Received p_public_A\n");
+    printf("From App    : Received p_public_A\n");
 }
 
 void ocall_send_PSK(char *encMessage){
     size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
 	encrypted_PSK_A = (char *) malloc((encMessageLen+1)*sizeof(char));
     memcpy(encrypted_PSK_A, encMessage, encMessageLen);
-    printf("From App: Received encrypted_PSK_A\n");
+    printf("From App    : Received encrypted_PSK_A\n");
 }
 
 void ocall_send_challenge(char *encMessage){
@@ -175,7 +175,15 @@ void ocall_send_challenge(char *encMessage){
 	encrypted_challenge = (char *) malloc((encMessageLen+1)*sizeof(char));
     memcpy(encrypted_challenge, encMessage, encMessageLen);
     if (verbose_debug) {printf("APP Encrypted mes: %s\n", encrypted_challenge);}
-    printf("From App: Received encrypted_challenge\n");
+    printf("From App    : Received encrypted_challenge\n");
+}
+
+void ocall_send_result(int cmp){
+  if (cmp) {
+    printf("From App    : Result match!\n");
+  } else {
+    printf("From App    : Result doesn't match!\n");
+  }
 }
 
 void export_public_key(){    
@@ -193,11 +201,11 @@ void export_public_key(){
     // Close the file
     newFile.close();
 
-    printf("From App: Exported p_public_A to filesystem\n");
+    printf("From App    : Exported p_public_A to filesystem\n");
 }
 
 void wait_for_file(std::string filePath){
-    std::cout << "From App: Waiting for '" << filePath << "'\n";
+    std::cout << "From App    : Waiting for '" << filePath << "'\n";
 
     // Based on https://stackoverflow.com/questions/18100391/check-if-a-file-exists-without-opening-it
     bool exists = false;
@@ -210,7 +218,7 @@ void wait_for_file(std::string filePath){
             sleep(2); // give the time to the file to be written
         }
     }
-    std::cout << "From App: Received file '" << filePath << "'\n";
+    std::cout << "From App    : Received file '" << filePath << "'\n";
 }
 
 void parse_public_key(){
@@ -221,7 +229,7 @@ void parse_public_key(){
     in.read((char*)::p_public_B.gy, SGX_ECP256_KEY_SIZE);
     in.close();
 
-    printf("From App: Received p_public_B\n");
+    printf("From App    : Received p_public_B\n");
 }
 
 void export_PSK(){    
@@ -239,7 +247,7 @@ void export_PSK(){
     // Close the file
     newFile.close();
 
-    printf("From App: Exported encrypted_PSK_A to filesystem\n");
+    printf("From App    : Exported encrypted_PSK_A to filesystem\n");
 }
 
 void parse_PSK(){
@@ -254,7 +262,7 @@ void parse_PSK(){
     in.close();
     if (verbose_debug) {printf("PARSE PSK_B LEN: %d\n", length);}
 
-    printf("From App: Received encrypted_PSK_B\n");
+    printf("From App    : Received encrypted_PSK_B\n");
 }
 
 void export_challenge(){    
@@ -272,7 +280,7 @@ void export_challenge(){
     // Close the file
     newFile.close();
 
-    printf("From App: Exported encrypted_challenge to filesystem\n");
+    printf("From App    : Exported encrypted_challenge to filesystem\n");
 }
 
 void parse_challenge_response(){
@@ -287,7 +295,7 @@ void parse_challenge_response(){
     in.close();
     if (verbose_debug) {printf("PARSE ENC LEN: %d\n", length);}
 
-    printf("From App: Received encrypted_challenge_response\n");
+    printf("From App    : Received encrypted_challenge_response\n");
 }
 
 
@@ -298,10 +306,10 @@ int SGX_CDECL main(int argc, char *argv[])
     (void)(argv);
     /* Initialize the enclave */
     if(initialize_enclave() < 0){
-        printf("Enclave initialization failed.\n");
+        printf("Enclave initialization failed\n");
         return -1;
     }
-    printf("From App: Enclave creation success. \n");
+    printf("From App    : Enclave creation success\n");
 
 
     sgx_status_t sgx_status;
@@ -316,7 +324,7 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     /************************
-    * END   [2. E_A key pair generation]
+    * END [2. E_A key pair generation]
     *************************/
 
 
@@ -327,7 +335,7 @@ int SGX_CDECL main(int argc, char *argv[])
     wait_for_file("../p_public_B");
     parse_public_key();
     /************************
-    * END   [1. Communication between A_A & A_B]
+    * END [1. Communication between A_A & A_B]
     *************************/
 
 
@@ -340,7 +348,7 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     /************************
-    * END   [3. E_B compute shared secret]
+    * END [3. E_B compute shared secret]
     *************************/
 
     getPSK(global_eid, &sgx_status);
@@ -356,7 +364,7 @@ int SGX_CDECL main(int argc, char *argv[])
     wait_for_file("../encrypted_PSK_B");
     parse_PSK();
     /************************
-    * END   [1. Communication between A_A & A_B]
+    * END [1. Communication between A_A & A_B]
     *************************/
 
     checkPSK(global_eid, &sgx_status, encrypted_PSK_B);
@@ -374,7 +382,7 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     /************************
-    * END   [4. E_A generates and encrypts the challenge]
+    * END [4. E_A generates and encrypts the challenge]
     *************************/
 
 
@@ -385,7 +393,7 @@ int SGX_CDECL main(int argc, char *argv[])
     wait_for_file("../encrypted_challenge_response");
     parse_challenge_response();
     /************************
-    * END   [1. Communication between A_A & A_B]
+    * END [1. Communication between A_A & A_B]
     *************************/
 
 
@@ -398,7 +406,7 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     /************************
-    * END   [6. E_A decrypts and verifies the challenge]
+    * END [6. E_A decrypts and verifies the challenge]
     *************************/
 
     /* Destroy the enclave */
@@ -410,7 +418,7 @@ int SGX_CDECL main(int argc, char *argv[])
     free(encrypted_challenge);
     delete(encrypted_challenge_response);
 
-    printf("From App: Enclave destroyed.\n");
+    printf("From App    : Enclave destroyed\n");
     return 0;
 }
 

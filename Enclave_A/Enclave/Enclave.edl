@@ -61,6 +61,7 @@ enclave {
         void ocall_send_public_key(sgx_ec256_public_t p_public);
         void ocall_send_PSK([in, size=38] char *encMessage);
         void ocall_send_challenge([in, size=36] char *encMessage);
+        void ocall_send_result(int cmp);
     };
 
 };

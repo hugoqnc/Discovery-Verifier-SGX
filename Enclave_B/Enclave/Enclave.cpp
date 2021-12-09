@@ -47,7 +47,7 @@ sgx_status_t generateKeyPair()
   return status;
 }
 /************************
-* END   [2. E_B key pair generation]
+* END [2. E_B key pair generation]
 *************************/
 
 /************************
@@ -74,7 +74,7 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_A)
   return status;
 }
 /************************
-* END   [3. E_B compute shared secret]
+* END [3. E_B compute shared secret]
 *************************/
 
 // The following functions encryptMessage and decryptMessage are based on https://github.com/rodolfoams/sgx-aes-gcm
@@ -191,7 +191,7 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 
   if (verbose_debug) {printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);}
 /************************
-* END   [6. E_B decrypts the challenge]
+* END [6. E_B decrypts the challenge]
 *************************/
 
 
@@ -230,7 +230,7 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 
 
 /************************
-* END   [7. E_B computes and encrypts the response]
+* END [7. E_B computes and encrypts the response]
 *************************/
 
   return SGX_SUCCESS;
