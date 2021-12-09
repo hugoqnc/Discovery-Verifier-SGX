@@ -165,8 +165,6 @@ void ocall_send_PSK(char *encMessage){
     size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
 	encrypted_PSK_A = (char *) malloc((encMessageLen+1)*sizeof(char));
     memcpy(encrypted_PSK_A, encMessage, encMessageLen);
-    //printf("APP Encrypted mes: %s\n", encMessage);
-    //printf("APP Encrypted mes: %s\n", encrypted_PSK_A);
     printf("From App: Received encrypted_PSK_A\n");
 }
 
@@ -174,14 +172,11 @@ void ocall_send_challenge(char *encMessage){
     size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 8; 
 	encrypted_challenge = (char *) malloc((encMessageLen+1)*sizeof(char));
     memcpy(encrypted_challenge, encMessage, encMessageLen);
-    //printf("APP Encrypted mes: %s\n", encMessage);
     printf("APP Encrypted mes: %s\n", encrypted_challenge);
     printf("From App: Received encrypted_challenge\n");
 }
 
-void export_public_key(){
-    //printf("KEY: %s | %s\n",p_public_A.gx,p_public_A.gy);
-    
+void export_public_key(){    
     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
     remove("../p_public_A");
@@ -224,7 +219,6 @@ void parse_public_key(){
     in.read((char*)::p_public_B.gy, SGX_ECP256_KEY_SIZE);
     in.close();
 
-    // printf("KEY: %s | %s\n", p_public_B.gx, p_public_B.gy);
     printf("From App: Received p_public_B\n");
 }
 
@@ -257,9 +251,7 @@ void parse_PSK(){
     in.read((char*)::encrypted_PSK_B, length);
     in.close();
     printf("PARSE PSK_B LEN: %d\n", length);
-    //encrypted_PSK_B[length] = '\0';
 
-    //printf("APP Encrypted mes: %s\n", encrypted_PSK_B);
     printf("From App: Received encrypted_PSK_B\n");
 }
 
@@ -286,11 +278,6 @@ void parse_challenge_response(){
 
     std::ifstream in("../encrypted_challenge_response");
     
-    //Get file length
-    // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
-    // in.seekg(0, std::ios::end); 
-    // int length = in.tellg();
-    // in.seekg(0, std::ios::beg);
     size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 4; 
     encrypted_challenge_response = new char[length]; 
 
@@ -298,7 +285,6 @@ void parse_challenge_response(){
     in.close();
     printf("PARSE ENC LEN: %d\n", length);
 
-    //printf("APP Encrypted mes: %s\n", encrypted_challenge_response);
     printf("From App: Received encrypted_challenge_response\n");
 }
 
@@ -314,7 +300,6 @@ int SGX_CDECL main(int argc, char *argv[])
         return -1;
     }
     printf("From App: Enclave creation success. \n");
-    //printf("From App: Write your protocol here ... \n");
 
 
     sgx_status_t sgx_status;

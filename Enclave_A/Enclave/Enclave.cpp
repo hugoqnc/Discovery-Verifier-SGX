@@ -30,8 +30,6 @@ int printf(const char* fmt, ...)
 
 sgx_status_t printSecret()
 {
-  //char buf[BUFSIZ] = {"From Enclave: Hello from the enclave.\n"};
-  //ocall_print_string(buf);
   printf("From Enclave: My secret is %u.\n", enclave_secret);
   return SGX_SUCCESS;
 }
@@ -78,15 +76,9 @@ sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B)
   {
       p_shared_key_128[i] = p_shared_key.s[i];
   }
-  
-  
-  // printf("KEY A: %s | %s\n",p_public.gx,p_public.gy);
-  // printf("KEY B: %s | %s\n",p_public_B.gx,p_public_B.gy);
-  // printf("S. DH: %s \n", p_shared_key_128);
 
   printf("From Enclave: Shared Key computed\n");
 
-  
   return status;
 }
 /************************
@@ -134,22 +126,14 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 		NULL, 0,
 		(sgx_aes_gcm_128bit_tag_t *) (p_dst));	
 	memcpy(encMessageOut,p_dst,lenOut);
-
-  // while(lenOut!=strlen(encMessageOut)){
-  //   printf("AVANT: %d", strlen(encMessageOut));
-  //   encMessageOut[strlen(encMessageOut)] = '\000';
-  //   printf("APRES: %d", strlen(encMessageOut));
-  // }
 }
 
 
 sgx_status_t getPSK()
 {
-	//printf("Original message: %s\n", PSK_A);
 
 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(PSK_A)); 
 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
-  // memset(encMessage, 0, encMessageLen+1);
 
 	encryptMessage(PSK_A, strlen(PSK_A), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
@@ -178,7 +162,6 @@ sgx_status_t checkPSK(char* encrypted_PSK_B)
 
 	decryptMessage(encrypted_PSK_B,encMessageLen,decMessage,decMessageLen);
 	decMessage[decMessageLen] = '\0';
-	//printf("Decrypted message: %s\n", decMessage);
 
   int cmp = strcmp(PSK_B, decMessage);
 
@@ -213,7 +196,6 @@ sgx_status_t getChallenge()
   }
 
   printf("From Enclave: Chose a=%d & b=%d for challenge\n", a, b);
-  //printf("From Enclave: Chose a=%s & b=%s for challenge\n", a, b);
 
   int bufferLen = 2*4;
   unsigned char* bufferToEncrypt = (unsigned char *) malloc((bufferLen+1)*sizeof(unsigned char));
@@ -229,7 +211,6 @@ sgx_status_t getChallenge()
 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + bufferLen); 
 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
-  // memset(encMessage, 0, encMessageLen+1);
 
 	encryptMessage((char*)bufferToEncrypt, bufferLen, encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
