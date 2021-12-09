@@ -4,7 +4,8 @@
 #include <stdio.h> /* vsnprintf */
 #include <string>
 
-int enclave_secret = 1337;
+bool verbose_debug = false;
+
 sgx_ec256_private_t p_private;
 sgx_ec256_public_t p_public;
 sgx_ecc_state_handle_t ecc_handle;
@@ -26,12 +27,6 @@ int printf(const char* fmt, ...)
     va_end(ap);
     ocall_print_string(buf);
     return (int)strnlen(buf, BUFSIZ - 1) + 1;
-}
-
-sgx_status_t printSecret()
-{
-  printf("From Enclave: My secret is %u.\n", enclave_secret);
-  return SGX_SUCCESS;
 }
 
 /************************
@@ -137,11 +132,11 @@ sgx_status_t getPSK()
 
 	encryptMessage(PSK_A, strlen(PSK_A), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
-  printf("PSK_A LEN: %d, %d\n", encMessageLen, strlen(encMessage));
+  if (verbose_debug) {printf("PSK_A LEN: %d, %d\n", encMessageLen, strlen(encMessage));}
 
-	printf("From Enclave: Encrypted PSK_A is %s\n", encMessage);
+	if (verbose_debug) {printf("From Enclave: Encrypted PSK_A is %s\n", encMessage);}
 
-  printf("From Enclave: Encrypted PSK_A computed (%s)\n", PSK_A);
+  printf("From Enclave: Encrypted PSK_A computed\n");
 
   ocall_send_PSK(encMessage);
 
@@ -152,9 +147,7 @@ sgx_status_t getPSK()
 
 sgx_status_t checkPSK(char* encrypted_PSK_B)
 {
-	printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
-
-  printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
+  if (verbose_debug) {printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);}
 
 	size_t decMessageLen = strlen(PSK_B);
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -166,11 +159,11 @@ sgx_status_t checkPSK(char* encrypted_PSK_B)
   int cmp = strcmp(PSK_B, decMessage);
 
   if (!cmp) {
-    printf("From Enclave: PSK_B match! (%s)\n", decMessage);
+    printf("From Enclave: PSK_B match!\n");
     free(decMessage);
     return SGX_SUCCESS;
   } else {
-    printf("From Enclave: PSK_B doesn't match! (%s != %s)\n", decMessage, PSK_B);
+    printf("From Enclave: PSK_B doesn't match!\n");
     free(decMessage);
     return SGX_ERROR_UNEXPECTED;
   }
@@ -195,7 +188,7 @@ sgx_status_t getChallenge()
     return status;
   }
 
-  printf("From Enclave: Chose a=%d & b=%d for challenge\n", a, b);
+  if (verbose_debug) {printf("From Enclave: Chose a=%d & b=%d for challenge\n", a, b);}
 
   int bufferLen = 2*4;
   unsigned char* bufferToEncrypt = (unsigned char *) malloc((bufferLen+1)*sizeof(unsigned char));
@@ -204,7 +197,7 @@ sgx_status_t getChallenge()
   memcpy(&bufferToEncrypt[4], (unsigned char *) &b, 4);
   bufferToEncrypt[bufferLen] = '\0';
 
-  printf("Buffer: %s\n", bufferToEncrypt);
+  if (verbose_debug) {printf("Buffer: %s\n", bufferToEncrypt);}
 
 
 
@@ -214,9 +207,9 @@ sgx_status_t getChallenge()
 
 	encryptMessage((char*)bufferToEncrypt, bufferLen, encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
-  printf("ENC LEN: %d | %d, %d\n", strlen((char*)bufferToEncrypt), encMessageLen, strlen(encMessage));
+  if (verbose_debug) {printf("ENC LEN: %d | %d, %d\n", strlen((char*)bufferToEncrypt), encMessageLen, strlen(encMessage));}
 
-	printf("Encrypted message: %s\n", encMessage);
+	if (verbose_debug) {printf("Encrypted message: %s\n", encMessage);}
 
 
   printf("From Enclave: Encrypted challenge computed\n");
@@ -238,7 +231,7 @@ sgx_status_t getChallenge()
 *************************/
 sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
 {
-	printf("From Enclave: Encrypted challenge response is %s\n", encrypted_challenge_response);
+	if (verbose_debug) {printf("From Enclave: Encrypted challenge response is %s\n", encrypted_challenge_response);}
 
 	size_t decMessageLen = 4;
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -247,10 +240,10 @@ sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
 	decryptMessage(encrypted_challenge_response,encMessageLen,decMessage,decMessageLen);
 	decMessage[decMessageLen] = '\0';
 	
-  printf("Decrypted message: %s\n", decMessage);
+  if (verbose_debug) {printf("Decrypted message: %s\n", decMessage);}
 
   unsigned int solved_A = a+b;
-  printf("RES: %d\n", solved_A);
+  if (verbose_debug) {printf("RES: %d\n", solved_A);}
 
   unsigned int solved_B; 
   memcpy((unsigned int *) &solved_B, &decMessage[0], 4);
@@ -260,10 +253,12 @@ sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
   int cmp = (solved_A == solved_B);
 
   if (cmp) {
-    printf("From Enclave: Result match! (%d)\n", solved_B);
+    printf("From Enclave: Result match!\n");
+    if (verbose_debug) {printf("From Enclave: Result match! (%d)\n", solved_B);}
     return SGX_SUCCESS;
   } else {
-    printf("From Enclave: Result doesn't match! (%d != %d)\n", solved_B, solved_A);
+    printf("From Enclave: Result doesn't match!\n");
+    if (verbose_debug) {printf("From Enclave: Result doesn't match! (%d != %d)\n", solved_B, solved_A);}
     return SGX_ERROR_UNEXPECTED;
   }
 }

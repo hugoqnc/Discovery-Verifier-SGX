@@ -14,6 +14,8 @@
 #include "App.h"
 #include "Enclave_u.h"
 
+bool verbose_debug = false;
+
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 
@@ -172,7 +174,7 @@ void ocall_send_challenge(char *encMessage){
     size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 8; 
 	encrypted_challenge = (char *) malloc((encMessageLen+1)*sizeof(char));
     memcpy(encrypted_challenge, encMessage, encMessageLen);
-    printf("APP Encrypted mes: %s\n", encrypted_challenge);
+    if (verbose_debug) {printf("APP Encrypted mes: %s\n", encrypted_challenge);}
     printf("From App: Received encrypted_challenge\n");
 }
 
@@ -250,7 +252,7 @@ void parse_PSK(){
 
     in.read((char*)::encrypted_PSK_B, length);
     in.close();
-    printf("PARSE PSK_B LEN: %d\n", length);
+    if (verbose_debug) {printf("PARSE PSK_B LEN: %d\n", length);}
 
     printf("From App: Received encrypted_PSK_B\n");
 }
@@ -283,7 +285,7 @@ void parse_challenge_response(){
 
     in.read((char*)::encrypted_challenge_response, length);
     in.close();
-    printf("PARSE ENC LEN: %d\n", length);
+    if (verbose_debug) {printf("PARSE ENC LEN: %d\n", length);}
 
     printf("From App: Received encrypted_challenge_response\n");
 }
@@ -304,11 +306,6 @@ int SGX_CDECL main(int argc, char *argv[])
 
     sgx_status_t sgx_status;
 
-    printSecret(global_eid, &sgx_status);
-    if (sgx_status != SGX_SUCCESS) {
-        print_error_message(sgx_status);
-        return -1;
-    }
 
     /************************
     * BEGIN [2. E_A key pair generation]

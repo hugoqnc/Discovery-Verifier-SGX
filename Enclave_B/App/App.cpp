@@ -12,6 +12,8 @@
 #include "App.h"
 #include "Enclave_u.h"
 
+bool verbose_debug = false;
+
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 
@@ -171,7 +173,7 @@ void ocall_send_challenge_response(char *encMessage){
     size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 4;
 	encrypted_challenge_response = (char *) malloc((encMessageLen+1)*sizeof(char));
     memcpy(encrypted_challenge_response, encMessage, encMessageLen);
-    printf("APP Encrypted mes: %s\n", encrypted_challenge_response);
+    if (verbose_debug) {printf("APP Encrypted mes: %s\n", encrypted_challenge_response);}
     printf("From App: Received encrypted_challenge_response\n");
 }
 
@@ -232,14 +234,13 @@ void parse_PSK(){
 
     in.read((char*)::encrypted_PSK_A, length);
     in.close();
-    printf("PARSE PSK_A LEN: %d\n", length);
+    if (verbose_debug) {printf("PARSE PSK_A LEN: %d\n", length);}
 
-    //printf("APP Encrypted mes: %s\n", encrypted_PSK_A);
     printf("From App: Received encrypted_PSK_A\n");
 }
 
 void export_PSK(){    
-    printf("From App: Encrypted PSK_B is %s\n", encrypted_PSK_B);
+    if (verbose_debug) {printf("From App: Encrypted PSK_B is %s\n", encrypted_PSK_B);}
     // Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
     remove("../encrypted_PSK_B");
@@ -267,9 +268,8 @@ void parse_challenge(){
 
     in.read((char*)::encrypted_challenge, length);
     in.close();
-    printf("PARSE ENC LEN: %d\n", length);
+    if (verbose_debug) {printf("PARSE ENC LEN: %d\n", length);}
 
-    //printf("APP Encrypted mes: %s\n", encrypted_challenge);
     printf("From App: Received encrypted_challenge\n");
 }
 
@@ -307,12 +307,6 @@ int SGX_CDECL main(int argc, char *argv[])
     
 
     sgx_status_t sgx_status;
-
-    printSecret(global_eid, &sgx_status);
-    if (sgx_status != SGX_SUCCESS) {
-        print_error_message(sgx_status);
-        return -1;
-    }
 
     /************************
     * BEGIN [2. E_B key pair generation]

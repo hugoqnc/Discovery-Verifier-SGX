@@ -4,7 +4,8 @@
 #include <stdio.h> /* vsnprintf */
 #include <string>
 
-int enclave_secret = 42;
+bool verbose_debug = false;
+
 sgx_ec256_private_t p_private;
 sgx_ec256_public_t p_public;
 sgx_ecc_state_handle_t ecc_handle;
@@ -23,12 +24,6 @@ int printf(const char* fmt, ...)
     va_end(ap);
     ocall_print_string(buf);
     return (int)strnlen(buf, BUFSIZ - 1) + 1;
-}
-
-sgx_status_t printSecret()
-{
-  printf("From Enclave: My secret is %u.\n", enclave_secret);
-  return SGX_SUCCESS;
 }
 
 /************************
@@ -128,7 +123,7 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 
 sgx_status_t checkPSK(char* encrypted_PSK_A)
 {
-	printf("From Enclave: Encrypted PSK_A is %s\n", encrypted_PSK_A);
+	if (verbose_debug) {printf("From Enclave: Encrypted PSK_A is %s\n", encrypted_PSK_A);}
 
 	size_t decMessageLen = strlen(PSK_A);
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -140,11 +135,11 @@ sgx_status_t checkPSK(char* encrypted_PSK_A)
   int cmp = strcmp(PSK_A, decMessage);
 
   if (!cmp) {
-    printf("From Enclave: PSK_A match! (%s)\n", decMessage);
+    printf("From Enclave: PSK_A match!\n");
     free(decMessage);
     return SGX_SUCCESS;
   } else {
-    printf("From Enclave: PSK_A doesn't match! (%s != %s)\n", decMessage, PSK_A);
+    printf("From Enclave: PSK_A doesn't match!\n");
     free(decMessage);
     return SGX_ERROR_UNEXPECTED;
   }
@@ -157,10 +152,10 @@ sgx_status_t getPSK()
 
 	encryptMessage(PSK_B, strlen(PSK_B), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
-	printf("From Enclave: Encrypted PSK_B is %s\n", encMessage);
-  printf("PSK_B LEN: %d, %d\n", encMessageLen, strlen(encMessage));
+	if (verbose_debug) {printf("From Enclave: Encrypted PSK_B is %s\n", encMessage);}
+  if (verbose_debug) {printf("PSK_B LEN: %d, %d\n", encMessageLen, strlen(encMessage));}
 
-  printf("From Enclave: Encrypted PSK_B computed (%s)\n", PSK_B);
+  printf("From Enclave: Encrypted PSK_B computed\n");
 
   ocall_send_PSK(encMessage);
 
@@ -175,7 +170,7 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 /************************
 * BEGIN [6. E_B decrypts the challenge]
 *************************/
-	printf("From Enclave: Encrypted challenge is %s\n", encrypted_challenge);
+	if (verbose_debug) {printf("From Enclave: Encrypted challenge is %s\n", encrypted_challenge);}
 
 	size_t decMessageLen = 8;
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -184,8 +179,8 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 	decryptMessage(encrypted_challenge,encMessageLen,decMessage,decMessageLen);
 	decMessage[decMessageLen] = '\0';
 	
-  printf("DEC LEN: %d | %d, %d\n", decMessageLen, encMessageLen, strlen(encrypted_challenge));
-  printf("Decrypted message: %s\n", decMessage);
+  if (verbose_debug) {printf("DEC LEN: %d | %d, %d\n", decMessageLen, encMessageLen, strlen(encrypted_challenge));}
+  if (verbose_debug) {printf("Decrypted message: %s\n", decMessage);}
 
   uint32_t a1; 
   uint32_t b1; 
@@ -194,7 +189,7 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 
   free(decMessage);
 
-  printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);
+  if (verbose_debug) {printf("From Enclave: Chose a1=%d & b1=%d for challenge\n", a1, b1);}
 /************************
 * END   [6. E_B decrypts the challenge]
 *************************/
@@ -204,7 +199,7 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 * BEGIN [7. E_B computes and encrypts the response]
 *************************/
   unsigned int solved = a1+b1;
-  printf("RES: %d\n", solved);
+  if (verbose_debug) {printf("RES: %d\n", solved);}
 
 
   int bufferLen = 4;
@@ -213,7 +208,7 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
   memcpy(&bufferToEncrypt[0], (unsigned char *) &solved, 4);
   bufferToEncrypt[bufferLen] = '\0';
 
-  printf("Buffer: %s\n", bufferToEncrypt);
+  if (verbose_debug) {printf("Buffer: %s\n", bufferToEncrypt);}
 
 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
 	size_t encMessageLen1 = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + bufferLen); 
@@ -221,9 +216,9 @@ sgx_status_t solveChallenge(char* encrypted_challenge)
 
 	encryptMessage((char*)bufferToEncrypt, bufferLen, encMessage, encMessageLen1);
 	encMessage[encMessageLen1] = '\0';
-  printf("ENC LEN: %d, %d\n", encMessageLen1, strlen(encMessage));
+  if (verbose_debug) {printf("ENC LEN: %d, %d\n", encMessageLen1, strlen(encMessage));}
 
-	printf("Encrypted message: %s\n", encMessage);
+	if (verbose_debug) {printf("Encrypted message: %s\n", encMessage);}
 
 
   printf("From Enclave: Encrypted challenge response computed\n");
