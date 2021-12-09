@@ -161,18 +161,18 @@ void ocall_send_public_key(sgx_ec256_public_t p_public){
 }
 
 void ocall_send_PSK(char *encMessage){
-    size_t encMessageLen = strlen(encMessage); 
+    size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
 	encrypted_PSK_B = (char *) malloc((encMessageLen+1)*sizeof(char));
-    strcpy(encrypted_PSK_B, encMessage);
+    memcpy(encrypted_PSK_B, encMessage, encMessageLen);
     //printf("APP Encrypted mes: %s\n", encMessage);
     //printf("APP Encrypted mes: %s\n", encrypted_PSK_B);
     printf("From App: Received encrypted_PSK_B\n");
 }
 
 void ocall_send_challenge_response(char *encMessage){
-    size_t encMessageLen = strlen(encMessage); 
+    size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 4;
 	encrypted_challenge_response = (char *) malloc((encMessageLen+1)*sizeof(char));
-    strcpy(encrypted_challenge_response, encMessage);
+    memcpy(encrypted_challenge_response, encMessage, encMessageLen);
     //printf("APP Encrypted mes: %s\n", encMessage);
     printf("APP Encrypted mes: %s\n", encrypted_challenge_response);
     printf("From App: Received encrypted_challenge_response\n");
@@ -235,13 +235,15 @@ void parse_PSK(){
     
     //Get file length
     // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
-    in.seekg(0, std::ios::end); 
-    int length = in.tellg();
-    in.seekg(0, std::ios::beg);
+    // in.seekg(0, std::ios::end); 
+    // int length = in.tellg();
+    // in.seekg(0, std::ios::beg);
+    size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
     encrypted_PSK_A = new char[length]; 
 
     in.read((char*)::encrypted_PSK_A, length);
     in.close();
+    printf("PARSE PSK_A LEN: %d\n", length);
 
     //printf("APP Encrypted mes: %s\n", encrypted_PSK_A);
     printf("From App: Received encrypted_PSK_A\n");
@@ -257,7 +259,7 @@ void export_PSK(){
     std::ofstream newFile("../encrypted_PSK_B");
 
     // Write to the file
-    size_t encMessageLen = strlen(encrypted_PSK_B); 
+    size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
     newFile.write((char*)::encrypted_PSK_B, encMessageLen);
 
     // Close the file
@@ -273,13 +275,15 @@ void parse_challenge(){
     
     //Get file length
     // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
-    in.seekg(0, std::ios::end); 
-    int length = in.tellg();
-    in.seekg(0, std::ios::beg);
+    // in.seekg(0, std::ios::end); 
+    // int length = in.tellg();
+    // in.seekg(0, std::ios::beg);
+    size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 8; 
     encrypted_challenge = new char[length]; 
 
     in.read((char*)::encrypted_challenge, length);
     in.close();
+    printf("PARSE ENC LEN: %d\n", length);
 
     //printf("APP Encrypted mes: %s\n", encrypted_challenge);
     printf("From App: Received encrypted_challenge\n");
@@ -294,7 +298,7 @@ void export_challenge_response(){
     std::ofstream newFile("../encrypted_challenge_response");
 
     // Write to the file
-    size_t encMessageLen = strlen(encrypted_challenge_response); 
+    size_t encMessageLen = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 4;
     newFile.write((char*)::encrypted_challenge_response, encMessageLen);
 
     // Close the file

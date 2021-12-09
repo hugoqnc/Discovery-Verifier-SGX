@@ -47,11 +47,12 @@ enclave {
       public sgx_status_t printSecret(void);
       public sgx_status_t generateKeyPair(void);
       public sgx_status_t computeSharedKey(sgx_ec256_public_t p_public_B);
-      public sgx_status_t checkPSK([in, string] char *encrypted_PSK_B);
+      public sgx_status_t checkPSK([in, size=38] char *encrypted_PSK_B);
       public sgx_status_t getPSK(void);
       public sgx_status_t getChallenge(void);
-      public sgx_status_t checkChallengeResponse([in, string] char *encrypted_challenge_response);
+      public sgx_status_t checkChallengeResponse([in, size=32] char *encrypted_challenge_response);
 
+      public sgx_status_t testEncryption(void);
     };
     /*
      * ocall_print_string - invokes OCALL to display string buffer inside the enclave.
@@ -61,8 +62,8 @@ enclave {
     untrusted {
         void ocall_print_string([in, string] const char *str);
         void ocall_send_public_key(sgx_ec256_public_t p_public);
-        void ocall_send_PSK([in, string] char *encMessage);
-        void ocall_send_challenge([in, string] char *encMessage);
+        void ocall_send_PSK([in, size=38] char *encMessage);
+        void ocall_send_challenge([in, size=36] char *encMessage);
     };
 
 };

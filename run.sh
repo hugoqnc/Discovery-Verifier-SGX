@@ -1,5 +1,6 @@
 # Clean traces
 rm trace_A.out;
+rm trace_B.out;
 
 # Compile everything
 cd Enclave_A; make clean; make SGX_MODE=SIM;
@@ -7,10 +8,16 @@ cd ../Enclave_B; make clean; make SGX_MODE=SIM;
 cd ..;
 
 # Try several times
-numberTries=20
+numberTries=5
 counter=1
 while [ $counter -le $numberTries ]
 do
+    # Jump lines for readable traces
+    echo \ >> trace_A.out
+    echo \ >> trace_B.out
+    echo $counter :$'\n' >> trace_A.out
+    echo $counter :$'\n' >> trace_B.out
+
     # Clean files
     rm p_public_A;
     rm p_public_B; 
@@ -24,13 +31,8 @@ do
     cd ../Enclave_B; gnome-terminal -- bash -c "./app >> ../trace_B.out;";
     cd ..;
 
-    # Jump lines for readable traces
-    echo \ >> trace_A.out
-    echo \ >> trace_B.out
-    echo \ >> trace_A.out
-    echo \ >> trace_B.out
-
     sleep 35
+    
     echo $counter/$numberTries
     ((counter++))
 done

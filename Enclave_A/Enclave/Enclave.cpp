@@ -134,6 +134,12 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
 		NULL, 0,
 		(sgx_aes_gcm_128bit_tag_t *) (p_dst));	
 	memcpy(encMessageOut,p_dst,lenOut);
+
+  // while(lenOut!=strlen(encMessageOut)){
+  //   printf("AVANT: %d", strlen(encMessageOut));
+  //   encMessageOut[strlen(encMessageOut)] = '\000';
+  //   printf("APRES: %d", strlen(encMessageOut));
+  // }
 }
 
 // sgx_status_t testEncryption()
@@ -166,9 +172,12 @@ sgx_status_t getPSK()
 
 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(PSK_A)); 
 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
+  // memset(encMessage, 0, encMessageLen+1);
 
 	encryptMessage(PSK_A, strlen(PSK_A), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
+  printf("PSK_A LEN: %d, %d\n", encMessageLen, strlen(encMessage));
+
 	printf("From Enclave: Encrypted PSK_A is %s\n", encMessage);
 
   printf("From Enclave: Encrypted PSK_A computed (%s)\n", PSK_A);
@@ -183,6 +192,14 @@ sgx_status_t getPSK()
 sgx_status_t checkPSK(char* encrypted_PSK_B)
 {
 	printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
+
+  // size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
+  // char * encrypted_PSK_B_ENCLAVE = (char *) malloc((length+1)*sizeof(char));
+  // memset(encrypted_PSK_B_ENCLAVE, 0, length+1);
+  // memcpy(encrypted_PSK_B_ENCLAVE, encrypted_PSK_B, strlen(encrypted_PSK_B));
+  // encrypted_PSK_B_ENCLAVE[length] = '\0';
+
+  printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
 
 	size_t decMessageLen = strlen(PSK_B);
 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
@@ -241,9 +258,12 @@ sgx_status_t getChallenge()
 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen((char*)bufferToEncrypt)); 
 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
+  // memset(encMessage, 0, encMessageLen+1);
 
 	encryptMessage((char*)bufferToEncrypt, strlen((char*)bufferToEncrypt), encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
+  printf("ENC LEN: %d | %d, %d\n", strlen((char*)bufferToEncrypt), encMessageLen, strlen(encMessage));
+
 	printf("Encrypted message: %s\n", encMessage);
 
 
@@ -298,3 +318,57 @@ sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
 /************************
 * END   [6. E_A decrypts and verifies the challenge]
 *************************/
+
+
+
+/****** DEBUGGING *****************************************************************************************************/
+
+sgx_status_t testEncryption()
+{
+  char *message = "I AM ALICE";
+	printf("Original message: %s\n", message);
+
+	// ENCRYPTION
+	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
+	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
+  memset(encMessage, 0, encMessageLen+1);
+
+	encryptMessage(message, strlen(message), encMessage, encMessageLen);
+	encMessage[encMessageLen] = '\0';
+	printf("Encrypted message: %s\n", encMessage);
+  printf("LEN: %d, %d\n", encMessageLen, strlen(encMessage));
+
+  // NEW MEMORY
+  size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
+  char * encrypted_PSK_B_ENCLAVE = (char *) malloc((length+1)*sizeof(char));
+  memset(encrypted_PSK_B_ENCLAVE, 0, length+1);
+  memcpy(encrypted_PSK_B_ENCLAVE, encMessage, strlen(encMessage));
+  encrypted_PSK_B_ENCLAVE[length] = '\0';
+
+  printf("Encrypted message received: %s\n", encMessage);
+
+  // DECRYPTION
+  char *message1 = "I AM ALICE";
+	size_t decMessageLen = strlen(message1);
+	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
+
+
+	decryptMessage(encrypted_PSK_B_ENCLAVE,length,decMessage,decMessageLen);
+	decMessage[decMessageLen] = '\0';
+	printf("Decrypted message: %s\n", decMessage);
+
+
+  // COMPARISON
+  int cmp = strcmp(message, decMessage);
+
+  if (!cmp) {
+    printf("Match! (%s)\n", decMessage);
+    free(decMessage);
+    return SGX_SUCCESS;
+  } else {
+    printf("Error (%s != %s)\n", decMessage, PSK_B);
+    free(decMessage);
+    return SGX_ERROR_UNEXPECTED;
+  }
+  return SGX_SUCCESS;
+}
