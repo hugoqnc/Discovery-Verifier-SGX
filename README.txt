@@ -6,6 +6,9 @@ This will first clean eventual files that are used for communication between the
 It will then compile both SGX applications. Then, it will run the challenge 20 times,
 and will finally display results, separated into four catgeories:
 executions with successful and failed challenges, executions with errors and timeouts.
+*Note: executions in the timeout category should be considered as executions with errors —
+they often happens when an error occurs in App B and so App A timeouts after waiting for B's response.*
+
 Details of the executions are provided in the files `trace_A.out` and `trace_B.out`.
 The time of execution is of 30 seconds per challenge, so about 10 minutes with the default 
 number of 20 challenges.
@@ -35,9 +38,9 @@ for the challenge should be `uint32_t`, meaning that they should be integers sto
 four bytes.
 
 ### Encryption
-I wasn't able to make the given functions *sgx_aes_ctr_encrypt* and *sgx_aes_ctr_decrypt*
+I wasn't able to make the given functions `sgx_aes_ctr_encrypt` and `sgx_aes_ctr_decrypt`
 work reliably.
-After a lot of time trying to make it work, I finally chose to use *sgx_rijndael128GCM_encrypt* and *sgx_rijndael128GCM_decrypt*
+After a lot of time trying to make it work, I finally chose to use `sgx_rijndael128GCM_encrypt` and `sgx_rijndael128GCM_decrypt`
 based on this [code](https://github.com/rodolfoams/sgx-aes-gcm). 
 
 ## Modifications
