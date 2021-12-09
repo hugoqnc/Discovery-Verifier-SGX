@@ -1,4 +1,9 @@
 # Intel SGX Enclave Application
+## Introduction
+This repo contains two unstrusted apps A and B, each having an associated secure enclave. Two users have apparently made the same discovery, but don't trust each other to share their results of their discovery. This project aims to verify that both have indeed found the same discovery (here, as an example, the challenge is to perform the addition of two integers), without actually disclosing one's result to the other user. Enclave A creates a challenge (a pair of integers) encrypts it (with a shared key obtained through DHKE). App A sends the challenge to App B, then Enclave B decrypts and solves the challenge (do the sum), and return the encrypted result. App B sends this result to App A, and Enclave A decrypts the result and compare it to its own result, then finally tells App A if both solution are equal or not.
+
+## Requirements
+You will need the Intel SGX SDK. This repo was made on Linux with [this version](https://download.01.org/intel-sgx/sgx-linux/2.15/distro/ubuntu20.04-server/sgx_linux_x64_sdk_2.15.100.3.bin) of Intel SGX for Linux.
 
 ## Instructions
 In the folder `EnclaveProtocol`, run the script `run.sh`.
