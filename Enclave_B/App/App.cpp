@@ -13,6 +13,7 @@
 #include "Enclave_u.h"
 
 bool verbose_debug = false;
+int timeoutFileReception = 8; //seconds
 
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
@@ -178,21 +179,29 @@ void ocall_send_challenge_response(char *encMessage){
 }
 
 
-void wait_for_file(std::string filePath){
+bool wait_for_file(std::string filePath){
     std::cout << "From App    : Waiting for '" << filePath << "'\n";
+    int secCount = 0;
 
     // Based on https://stackoverflow.com/questions/18100391/check-if-a-file-exists-without-opening-it
     bool exists = false;
-    while(!exists){
+    while(!exists && (secCount<=timeoutFileReception)){ //stops after 8 seconds
         int res = access(filePath.c_str(), R_OK);
-        if (res<0) {            
+        if (res<0) {     
+            secCount++;       
             sleep(1);
         } else {
             exists = true;
             sleep(2); // give the time to the file to be written
         }
     }
+
+    if(!exists){
+        printf("From App    : File not received\n");
+        return false;
+    }
     std::cout << "From App    : Received file '" << filePath << "'\n";
+    return true;
 }
 
 void parse_public_key(){
@@ -324,7 +333,11 @@ int SGX_CDECL main(int argc, char *argv[])
     /************************
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
-    wait_for_file("../p_public_A");
+    int received = wait_for_file("../p_public_A");
+    if (!received){
+        sgx_destroy_enclave(global_eid);
+        return 0;
+    }
     parse_public_key();
     /************************
     * END [1. Communication between A_A & A_B]
@@ -356,7 +369,11 @@ int SGX_CDECL main(int argc, char *argv[])
     /************************
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
-    wait_for_file("../encrypted_PSK_A");
+    received = wait_for_file("../encrypted_PSK_A");
+    if (!received){
+        sgx_destroy_enclave(global_eid);
+        return 0;
+    }
     parse_PSK();
     /************************
     * END [1. Communication between A_A & A_B]
@@ -378,7 +395,13 @@ int SGX_CDECL main(int argc, char *argv[])
     * BEGIN [1. Communication between A_A & A_B]
     *************************/
     export_PSK();
-    wait_for_file("../encrypted_challenge");
+    received = wait_for_file("../encrypted_challenge");
+    if (!received){
+        sgx_destroy_enclave(global_eid);
+        free(encrypted_PSK_B);
+        delete(encrypted_PSK_A);
+        return 0;
+    }
     parse_challenge();
     /************************
     * END [1. Communication between A_A & A_B]
