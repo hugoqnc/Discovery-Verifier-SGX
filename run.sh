@@ -1,13 +1,16 @@
 # Clean traces
+echo $'\n'CLEANING$'\n'
 rm trace_A.out;
 rm trace_B.out;
 
 # Compile everything
+echo $'\n'COMPILATION$'\n'
 cd Enclave_A; make clean; make SGX_MODE=SIM;
 cd ../Enclave_B; make clean; make SGX_MODE=SIM;
 cd ..;
 
 # Try several times
+echo $'\n'TESTING$'\n'
 numberTries=20
 counter=1
 while [ $counter -le $numberTries ]
@@ -36,6 +39,11 @@ do
 done
 
 # Results
+echo $'\n'RESULTS$'\n'
 echo Number of tries: $numberTries;
 echo Number of successes: $(cat trace_A.out | grep -c "Result match!");
-echo Number of errors: $(cat trace_A.out | grep -c Error);
+echo Number of fails:     $(cat trace_A.out | grep -c "Result doesn't match!");
+echo Number of errors:    $(cat trace_A.out | grep -c "Error:");
+echo Number of timeouts:  $(cat trace_A.out | grep -c "File not received");
+
+echo $'\n'More informations in files 'trace_A.out' and 'trace_B.out'$'\n'
