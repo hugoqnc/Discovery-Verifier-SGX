@@ -190,7 +190,7 @@ void wait_for_file(std::string filePath){
             sleep(1);
         } else {
             exists = true;
-            sleep(4); // give the time to the file to be written
+            sleep(2); // give the time to the file to be written
         }
     }
     std::cout << "From App: Received file '" << filePath << "'\n";

@@ -256,11 +256,11 @@ sgx_status_t getChallenge()
 
 
 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
-	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen((char*)bufferToEncrypt)); 
+	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + bufferLen); 
 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
   // memset(encMessage, 0, encMessageLen+1);
 
-	encryptMessage((char*)bufferToEncrypt, strlen((char*)bufferToEncrypt), encMessage, encMessageLen);
+	encryptMessage((char*)bufferToEncrypt, bufferLen, encMessage, encMessageLen);
 	encMessage[encMessageLen] = '\0';
   printf("ENC LEN: %d | %d, %d\n", strlen((char*)bufferToEncrypt), encMessageLen, strlen(encMessage));
 
