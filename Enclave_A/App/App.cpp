@@ -250,17 +250,9 @@ void parse_PSK(){
     //Based on https://stackoverflow.com/questions/3811328/try-to-write-char-to-a-text-file/3811367
 
     std::ifstream in("../encrypted_PSK_B");
-    
-    //Get file length
-    // Based on https://stackoverflow.com/questions/2602013/read-whole-ascii-file-into-c-stdstring
-    // in.seekg(0, std::ios::end); 
-    // int length = in.tellg();
-    // in.seekg(0, std::ios::beg);
+
     size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
     encrypted_PSK_B = new char[length]; 
-    // encrypted_PSK_B = (char *) malloc((length+1)*sizeof(char));
-    // memset(encrypted_PSK_B, 0, length+1);
-    // encrypted_PSK_B[length] = '\0';
 
     in.read((char*)::encrypted_PSK_B, length);
     in.close();
@@ -326,16 +318,6 @@ int SGX_CDECL main(int argc, char *argv[])
 
 
     sgx_status_t sgx_status;
-
-    /* DEBUGGING *************/
-    // testEncryption(global_eid, &sgx_status);
-    // if (sgx_status != SGX_SUCCESS) {
-    //     print_error_message(sgx_status);
-    //     return -1;
-    // }
-
-    // return 0;
-    /*************************/
 
     printSecret(global_eid, &sgx_status);
     if (sgx_status != SGX_SUCCESS) {
@@ -442,7 +424,9 @@ int SGX_CDECL main(int argc, char *argv[])
 
     // free allocated memory
     free(encrypted_PSK_A);
+    delete(encrypted_PSK_B);
     free(encrypted_challenge);
+    delete(encrypted_challenge_response);
 
     printf("From App: Enclave destroyed.\n");
     return 0;

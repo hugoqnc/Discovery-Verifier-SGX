@@ -51,8 +51,6 @@ enclave {
       public sgx_status_t getPSK(void);
       public sgx_status_t getChallenge(void);
       public sgx_status_t checkChallengeResponse([in, size=32] char *encrypted_challenge_response);
-
-      public sgx_status_t testEncryption(void);
     };
     /*
      * ocall_print_string - invokes OCALL to display string buffer inside the enclave.

@@ -142,29 +142,6 @@ void encryptMessage(char *decMessageIn, size_t len, char *encMessageOut, size_t 
   // }
 }
 
-// sgx_status_t testEncryption()
-// {
-//   char *message = "Hello, crypto enclave!";
-// 	printf("Original message: %s\n", message);
-
-// 	// The encrypted message will contain the MAC, the IV, and the encrypted message itself.
-// 	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
-// 	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
-
-// 	encryptMessage(message, strlen(message), encMessage, encMessageLen);
-// 	encMessage[encMessageLen] = '\0';
-// 	printf("Encrypted message: %s\n", encMessage);
-
-//   // The decrypted message will contain the same message as the original one.
-// 	size_t decMessageLen = strlen(message);
-// 	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
-
-// 	decryptMessage(encMessage,encMessageLen,decMessage,decMessageLen);
-// 	decMessage[decMessageLen] = '\0';
-// 	printf("Decrypted message: %s\n", decMessage);
-
-//   return SGX_SUCCESS;
-// }
 
 sgx_status_t getPSK()
 {
@@ -192,12 +169,6 @@ sgx_status_t getPSK()
 sgx_status_t checkPSK(char* encrypted_PSK_B)
 {
 	printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
-
-  // size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
-  // char * encrypted_PSK_B_ENCLAVE = (char *) malloc((length+1)*sizeof(char));
-  // memset(encrypted_PSK_B_ENCLAVE, 0, length+1);
-  // memcpy(encrypted_PSK_B_ENCLAVE, encrypted_PSK_B, strlen(encrypted_PSK_B));
-  // encrypted_PSK_B_ENCLAVE[length] = '\0';
 
   printf("From Enclave: Encrypted PSK_B is %s\n", encrypted_PSK_B);
 
@@ -318,57 +289,3 @@ sgx_status_t checkChallengeResponse(char* encrypted_challenge_response)
 /************************
 * END   [6. E_A decrypts and verifies the challenge]
 *************************/
-
-
-
-/****** DEBUGGING *****************************************************************************************************/
-
-sgx_status_t testEncryption()
-{
-  char *message = "I AM ALICE";
-	printf("Original message: %s\n", message);
-
-	// ENCRYPTION
-	size_t encMessageLen = (SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + strlen(message)); 
-	char *encMessage = (char *) malloc((encMessageLen+1)*sizeof(char));
-  memset(encMessage, 0, encMessageLen+1);
-
-	encryptMessage(message, strlen(message), encMessage, encMessageLen);
-	encMessage[encMessageLen] = '\0';
-	printf("Encrypted message: %s\n", encMessage);
-  printf("LEN: %d, %d\n", encMessageLen, strlen(encMessage));
-
-  // NEW MEMORY
-  size_t length = SGX_AESGCM_MAC_SIZE + SGX_AESGCM_IV_SIZE + 10; 
-  char * encrypted_PSK_B_ENCLAVE = (char *) malloc((length+1)*sizeof(char));
-  memset(encrypted_PSK_B_ENCLAVE, 0, length+1);
-  memcpy(encrypted_PSK_B_ENCLAVE, encMessage, strlen(encMessage));
-  encrypted_PSK_B_ENCLAVE[length] = '\0';
-
-  printf("Encrypted message received: %s\n", encMessage);
-
-  // DECRYPTION
-  char *message1 = "I AM ALICE";
-	size_t decMessageLen = strlen(message1);
-	char *decMessage = (char *) malloc((decMessageLen+1)*sizeof(char));
-
-
-	decryptMessage(encrypted_PSK_B_ENCLAVE,length,decMessage,decMessageLen);
-	decMessage[decMessageLen] = '\0';
-	printf("Decrypted message: %s\n", decMessage);
-
-
-  // COMPARISON
-  int cmp = strcmp(message, decMessage);
-
-  if (!cmp) {
-    printf("Match! (%s)\n", decMessage);
-    free(decMessage);
-    return SGX_SUCCESS;
-  } else {
-    printf("Error (%s != %s)\n", decMessage, PSK_B);
-    free(decMessage);
-    return SGX_ERROR_UNEXPECTED;
-  }
-  return SGX_SUCCESS;
-}

@@ -434,7 +434,9 @@ int SGX_CDECL main(int argc, char *argv[])
 
     // free allocated memory
     free(encrypted_PSK_B);
+    delete(encrypted_PSK_A);
     free(encrypted_challenge_response);
+    delete(encrypted_challenge);
 
     printf("From App: Enclave destroyed.\n");
     return 0;
